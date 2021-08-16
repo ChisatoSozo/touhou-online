@@ -1,0 +1,51 @@
+syntax = "proto3";
+package touhou;
+
+message Empty {}
+
+message Vector3D {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message Quaternion4D {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+    float w = 4;
+}
+
+message Pose {
+    Vector3D position = 1;
+    Quaternion4D orientation = 2;
+}
+
+message Rig {
+    Pose head = 1;
+    Pose leftHand = 2;
+    Pose rightHand = 3;
+}
+
+message PlayerState {
+    string username = 1;
+    Rig rig = 2;
+}
+
+message WorldState {
+    repeated PlayerState players = 1;
+}
+
+message WorldRequest {
+    string seed = 1;
+}
+
+message World {
+    repeated float terrain =  1;
+}
+
+service Touhou {
+    rpc PlayerStateUpdate(stream PlayerState) returns (Empty) {};
+    rpc WorldUpdate(Empty) returns (stream WorldState) {};
+    rpc WorldDownload(WorldRequest) returns (World);
+}
