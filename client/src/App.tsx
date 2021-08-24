@@ -25,11 +25,6 @@ function App() {
                 </directionalLight>
                 <hemisphericLight name="light1" intensity={0.3} direction={Vector3.Up()} />
                 <Terrain />
-                <ground receiveShadows position={new Vector3(0, -1, 0)} name="ground" width={100} height={100}>
-                    <standardMaterial name="mat">
-                        <texture assignTo="diffuseTexture" url="/assets/textures/grass.jpg" name="grass" />
-                    </standardMaterial>
-                </ground>
             </Scene>
         </Engine>
     );

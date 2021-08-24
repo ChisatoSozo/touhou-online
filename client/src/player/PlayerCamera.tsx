@@ -1,4 +1,4 @@
-import { Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
+import { Color3, Matrix, Quaternion, Texture, TransformNode, Vector3 } from '@babylonjs/core';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useBeforeRender, useEngine } from 'react-babylonjs';
 import { playerPositionOffset, playerRotationOffset } from './PlayerMovement';
@@ -7,11 +7,12 @@ export const PlayerCamera = () => {
     const engine = useEngine();
     const canvas = engine?.getRenderingCanvas();
     const cameraRef = useRef();
-    const transformNodeRef = useRef<TransformNode>();
+    const transformPositionNodeRef = useRef<TransformNode>();
+    const transformRotationNodeRef = useRef<TransformNode>();
 
     const cameraHandler = useCallback((e) => {
         if (!cameraRef.current) return;
-        const x = e.offsetX;
+        const x = e.target.offsetWidth / 2;
         const y = e.offsetY;
         const width = e.target.offsetWidth;
         const height = e.target.offsetHeight;
@@ -43,9 +44,9 @@ export const PlayerCamera = () => {
     }, [canvas, cameraHandler]);
 
     useBeforeRender(() => {
-        if (!transformNodeRef.current) return;
-        transformNodeRef.current.position.copyFrom(playerPositionOffset.add(new Vector3(0, 1.88, 0)));
-        transformNodeRef.current.rotationQuaternion = Quaternion.FromEulerAngles(
+        if (!transformPositionNodeRef.current || !transformRotationNodeRef.current) return;
+        transformPositionNodeRef.current.position.copyFrom(playerPositionOffset.add(new Vector3(0, 1.88, 0)));
+        transformRotationNodeRef.current.rotationQuaternion = Quaternion.FromEulerAngles(
             playerRotationOffset.x,
             playerRotationOffset.y,
             playerRotationOffset.z,
@@ -53,8 +54,15 @@ export const PlayerCamera = () => {
     });
 
     return (
-        <transformNode name="cameraTransform" ref={transformNodeRef} position={new Vector3(0, 1.88, 0)}>
-            <targetCamera fov={1.0472} ref={cameraRef} name="camera" minZ={0.01} maxZ={100} position={new Vector3(0, 0, 0)} />
+        <transformNode name="cameraPosition" ref={transformPositionNodeRef}>
+            <box name="skybox" size={1000}>
+                <standardMaterial name="skyMat" disableLighting={true} backFaceCulling={false} diffuseColor={new Color3(0, 0, 0)} specularColor={new Color3(0, 0, 0)}>
+                    <cubeTexture name="skyTexture" assignTo="reflectionTexture" coordinatesMode={Texture.SKYBOX_MODE} rootUrl="/terrain/skybox/TropicalSunnyDay" />
+                </standardMaterial>
+            </box>
+            <transformNode name="cameraTransform" ref={transformRotationNodeRef} position={new Vector3(0, 1.88, 0)}>
+                <targetCamera fov={1.0472} ref={cameraRef} name="camera" minZ={0.01} maxZ={1000} position={new Vector3(0, 0, 0)} />
+            </transformNode>
         </transformNode>
     );
 };

@@ -3,10 +3,10 @@ import React from 'react';
 import { keyObject } from '../containers/ControlsContext';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
 import { useXRCamera } from '../hooks/useXR';
-import { LATERAL_SPEED } from '../utils/Constants';
+import { LATERAL_SPEED, SPIN_SPEED } from '../utils/Constants';
 import { CREATIVE } from '../utils/Switches';
 
-export const playerPositionOffset = new Vector3();
+export const playerPositionOffset = new Vector3(0, 50, 0);
 export const playerRotationOffset = new Vector3();
 
 export const PlayerMovement: React.FC = () => {
@@ -43,8 +43,8 @@ export const PlayerMovement: React.FC = () => {
         } else {
             if (FORWARD) playerPositionOffset.addInPlace(forwardVec.scale(deltaS * LATERAL_SPEED * slowFactor * +FORWARD));
             if (BACK) playerPositionOffset.addInPlace(forwardVec.scale(-deltaS * LATERAL_SPEED * slowFactor * +BACK));
-            if (LEFT) playerRotationOffset.addInPlace(Vector3.Up().scale(-deltaS * LATERAL_SPEED * slowFactor * +LEFT));
-            if (RIGHT) playerRotationOffset.addInPlace(Vector3.Up().scale(deltaS * LATERAL_SPEED * slowFactor * +RIGHT));
+            if (LEFT) playerRotationOffset.addInPlace(Vector3.Up().scale(-deltaS * SPIN_SPEED * slowFactor * +LEFT));
+            if (RIGHT) playerRotationOffset.addInPlace(Vector3.Up().scale(deltaS * SPIN_SPEED * slowFactor * +RIGHT));
             if (CREATIVE) {
                 if (UP) playerPositionOffset.addInPlace(Vector3.Up().scale(-deltaS * LATERAL_SPEED * slowFactor * +UP));
                 if (DOWN) playerPositionOffset.addInPlace(Vector3.Up().scale(deltaS * LATERAL_SPEED * slowFactor * +DOWN));
