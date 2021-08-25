@@ -1,5 +1,7 @@
+import { Scalar } from '@babylonjs/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useBeforeRender } from 'react-babylonjs';
+import { modRange } from '../utils/MathUtils';
 
 const defaultKeyMap = {
     27: 'MENU',
@@ -14,13 +16,15 @@ const defaultKeyMap = {
     81: 'DOWN', //q
     39: 'RIGHT', //right arrow
     68: 'RIGHT', //d
-    16: 'SLOW', //shift
-    32: 'BOMB', //space
+    16: 'CROUCH', //shift
+    32: 'JUMP', //space
     1: 'SHOOT', //click
     80: 'DIALOGUE', //p
 };
 
 interface KeyDown {
+    lookX: number;
+    lookY: number;
     [key: string]: boolean | number;
 }
 interface KeyMap {
@@ -29,7 +33,10 @@ interface KeyMap {
 
 const makeDefaultDownKeyMap = () => {
     const keys = new Set(Object.values(defaultKeyMap));
-    const downKeyMap: KeyDown = {};
+    const downKeyMap: KeyDown = {
+        lookX: 0,
+        lookY: 0
+    };
     keys.forEach((key) => {
         downKeyMap[key] = false;
     });
@@ -43,11 +50,19 @@ interface KeyObject {
 
 export const keyObject: KeyObject = {
     metaDownKeys: makeDefaultDownKeyMap(),
-    disabledMap: {},
+    disabledMap: {
+        lookX: 0,
+        lookY: 0
+    },
 };
 
 export interface DanmakuControlEvent {
     which: number;
+}
+
+export interface DanmakuPointerEvent {
+    movementX: number;
+    movementY: number;
 }
 
 export interface IControlsContext {
@@ -56,6 +71,7 @@ export interface IControlsContext {
     downKeys: KeyDown;
     keyDownHandler: (event: DanmakuControlEvent) => void;
     keyUpHandler: (event: DanmakuControlEvent) => void;
+    lookMoveHandler: (event: DanmakuPointerEvent) => void;
     disableControl: (control: string) => void;
     enableControl: (control: string) => void;
     setTyping: (typing: boolean) => void;
@@ -67,11 +83,17 @@ const defaultControlsContext: IControlsContext = {
     setKeyMap: () => {
         return;
     },
-    downKeys: {},
+    downKeys: {
+        lookX: 0,
+        lookY: 0
+    },
     keyDownHandler: () => {
         return;
     },
     keyUpHandler: () => {
+        return;
+    },
+    lookMoveHandler: () => {
         return;
     },
     disableControl: () => {
@@ -91,7 +113,10 @@ const defaultControlsContext: IControlsContext = {
 export const ControlsContext = React.createContext(defaultControlsContext);
 
 export const useControlsContext = (outsideOfRenderer: boolean) => {
-    const [downKeys, setDownKeys] = useState<KeyDown>({});
+    const [downKeys, setDownKeys] = useState<KeyDown>({
+        lookX: 0,
+        lookY: 0
+    });
     const [typing, setTyping] = useState(false);
     const [disabled, setDisabled] = useState(false);
 
@@ -137,6 +162,16 @@ export const useControlsContext = (outsideOfRenderer: boolean) => {
         [disabled, keyMap, typing],
     );
 
+    const lookMoveHandler = useCallback((event) => {
+        if (event.movementX === undefined || event.movementY === undefined) throw new Error("Recieved look event with no data")
+        const newMetaDownKeys = { ...keyObject.metaDownKeys };
+        newMetaDownKeys["lookX"] += event.movementX / window.innerWidth;
+        newMetaDownKeys["lookY"] += event.movementY / window.innerHeight;
+        newMetaDownKeys["lookX"] = modRange(newMetaDownKeys["lookX"], -Math.PI, Math.PI)
+        newMetaDownKeys["lookY"] = Scalar.Clamp(newMetaDownKeys["lookY"], -Math.PI / 2, Math.PI / 2)
+        keyObject.metaDownKeys = newMetaDownKeys;
+    }, [])
+
     const keySync = useCallback(() => {
         setDownKeys(keyObject.metaDownKeys);
     }, [setDownKeys]);
@@ -169,6 +204,7 @@ export const useControlsContext = (outsideOfRenderer: boolean) => {
         downKeys,
         keyDownHandler,
         keyUpHandler,
+        lookMoveHandler,
         disableControl,
         enableControl,
         setTyping,

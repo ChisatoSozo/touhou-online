@@ -1120,7 +1120,6 @@ export class DynamicTerrain {
             // Cast is due to wrong definition in lib.d.ts from ts 1.3 - https://github.com/Microsoft/TypeScript/issues/949
             const _buffer = <Uint8Array>(<any>context.getImageData(0, 0, bufferWidth, bufferHeight).data)
             const buffer = blur([...Float32Array.from(_buffer)], bufferHeight)
-            console.log(new Set(buffer))
 
             let x = 0.0
             let y = 0.0

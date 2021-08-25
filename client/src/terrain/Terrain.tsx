@@ -1,8 +1,11 @@
-import { Color3, PBRMetallicRoughnessMaterial, Scalar, StandardMaterial } from '@babylonjs/core';
+import { Color3, PBRMetallicRoughnessMaterial, PhysicsImpostor, Scalar, StandardMaterial } from '@babylonjs/core';
 import { GroundMesh } from '@babylonjs/core/Meshes/groundMesh';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useScene } from 'react-babylonjs';
+import { TerrainContext } from '../containers/TerrainContext';
 import { DynamicTerrain } from '../forks/DynamicTerrain';
+import { ENABLE_PHYSICS } from '../utils/Switches';
 
 const mapSize = 1000;
 const heightScale = 50;
@@ -28,11 +31,28 @@ const getColor = (height: number) => {
 
 
 
-const LODLimits = [resolution / 8, resolution / 32, resolution / 128];
-console.log(LODLimits)
+const LODLimits = [resolution / 8, resolution / 16, resolution / 32];
 
 export const Terrain = () => {
     const scene = useScene();
+    const { terrain, setTerrain, setTerrainPhysicsImpostor } = useContext(TerrainContext)
+
+    useEffect(() => {
+        if (!scene) return;
+        let collisionTerrain: Mesh;
+        if (ENABLE_PHYSICS) {
+            collisionTerrain = Mesh.CreateGroundFromHeightMap("collisionTerrain", '/terrain/height.png', mapSize, mapSize, resolution, 0, heightScale, scene, false, function () {
+                collisionTerrain.physicsImpostor = new PhysicsImpostor(collisionTerrain, PhysicsImpostor.HeightmapImpostor, { mass: 0, friction: 1 });
+                setTerrainPhysicsImpostor(collisionTerrain.physicsImpostor)
+            });
+            collisionTerrain.isVisible = false;
+        }
+
+        return () => {
+            if (collisionTerrain) collisionTerrain.dispose()
+        }
+    }, [scene, setTerrainPhysicsImpostor])
+
     const [mapData, setMapData] = useState<Float32Array>()
     useEffect(() => {
         if (!scene) return;
@@ -76,8 +96,6 @@ export const Terrain = () => {
         return mapColors;
     }, [mapData]);
 
-    const [terrain, setTerrain] = useState<DynamicTerrain>()
-
     useEffect(() => {
         if (!mapData || !scene) return
         const terrain = new DynamicTerrain("terrain", scene, {
@@ -87,20 +105,23 @@ export const Terrain = () => {
             mapSubZ: resolution,
             terrainSub: resolution / 2,
         })
-        terrain.mesh.material = new PBRMetallicRoughnessMaterial("terrainMat", scene)
+        const terrainMat = new PBRMetallicRoughnessMaterial("terrainMat", scene)
+        terrainMat.roughness = 0.9
+        terrain.mesh.material = terrainMat
 
         terrain.subToleranceX = 20;
         terrain.subToleranceZ = 20;
         terrain.LODLimits = LODLimits;
         terrain.mesh.position.y = -0.1
         terrain.update(true)
+
         setTerrain(terrain)
 
         return () => {
             terrain.mesh.dispose();
             setTerrain(undefined);
         }
-    }, [mapColors, mapData, scene]);
+    }, [mapColors, mapData, scene, setTerrain]);
 
     const planeRef = useRef<GroundMesh>();
     useEffect(() => {

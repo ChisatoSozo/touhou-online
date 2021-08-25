@@ -28,9 +28,10 @@ export const World = () => {
 
     return (
         <>
-            <PlayerMovement />
-            <PlayerCamera />
-            <PlayerAvatar rig={rig} assetContainer={container} />
+            <PlayerMovement>
+                <PlayerCamera />
+                <PlayerAvatar rig={rig} assetContainer={container} />
+            </PlayerMovement>
 
             {worldState &&
                 worldState.playersList.map(

@@ -1,7 +1,6 @@
 import { Vector3 } from '@babylonjs/core';
 import { useRef } from 'react';
 import { useBeforeRender } from 'react-babylonjs';
-import { playerPositionOffset, playerRotationOffset } from '../player/PlayerMovement';
 import { useHands, useXRCamera } from './useXR';
 
 export interface InternalRig {
@@ -26,12 +25,12 @@ export const useRig: () => React.MutableRefObject<InternalRig | undefined> = () 
     const rig = useRef<InternalRig>();
 
     useBeforeRender(() => {
-        let position = playerPositionOffset;
+        let position = new Vector3(0, 0, 0);
         if (xrCamera) {
             position = xrCamera.position;
         }
 
-        let rotation = playerRotationOffset;
+        let rotation = new Vector3(0, 0, 0);
         if (xrCamera) {
             rotation = xrCamera.rotationQuaternion.toEulerAngles();
         }
@@ -43,15 +42,15 @@ export const useRig: () => React.MutableRefObject<InternalRig | undefined> = () 
             },
             leftHand: hands.left?.controller.grip
                 ? {
-                      position: hands.left.controller.grip.position,
-                      rotation: hands.left.controller.grip.rotation,
-                  }
+                    position: hands.left.controller.grip.position,
+                    rotation: hands.left.controller.grip.rotation,
+                }
                 : undefined,
             rightHand: hands.right?.controller.grip
                 ? {
-                      position: hands.right.controller.grip.position,
-                      rotation: hands.right.controller.grip.rotation,
-                  }
+                    position: hands.right.controller.grip.position,
+                    rotation: hands.right.controller.grip.rotation,
+                }
                 : undefined,
         };
     });
