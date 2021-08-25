@@ -3,7 +3,7 @@ import { keyObject } from "../../containers/ControlsContext";
 import { LATERAL_SPEED, WALK_MAX_SLOPE } from "../../utils/Constants";
 import { MovementUpdateFunction } from "../PlayerMovement";
 
-export const doWalking: MovementUpdateFunction = (deltaS, mesh, worldTerrain, scene, setMovementState, createPhysicsImpostor) => {
+export const doWalking: MovementUpdateFunction = (deltaS, mesh, worldTerrain, scene, movementStateRef, createPhysicsImpostor) => {
     if (!worldTerrain) return;
 
     const FORWARD = keyObject.metaDownKeys['FORWARD'];
@@ -38,6 +38,6 @@ export const doWalking: MovementUpdateFunction = (deltaS, mesh, worldTerrain, sc
         if (!newPhysicsImpostor) return;
         mesh.physicsImpostor = newPhysicsImpostor;
         mesh.physicsImpostor.applyImpulse(new Vector3(0, 10, 0).add(displacementVec.scale(1 / deltaS)), mesh.getAbsolutePosition())
-        setMovementState("falling")
+        movementStateRef.current = "falling"
     }
 }

@@ -1,5 +1,5 @@
 import { Mesh, PhysicsImpostor, Quaternion, Scene, Vector3 } from '@babylonjs/core';
-import React, { Dispatch, SetStateAction, useCallback, useContext, useRef, useState } from 'react';
+import React, { MutableRefObject, useCallback, useContext, useRef } from 'react';
 import { TerrainContext } from '../containers/TerrainContext';
 import { DynamicTerrain } from '../forks/DynamicTerrain';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
@@ -10,18 +10,18 @@ import { doWalking } from './playerMovement/Walking';
 const playerPosition = new Vector3(0, 50, 0)
 
 export type MovementState = "walking" | "falling" | "flying";
-export type MovementUpdateFunction = (deltaS: number, transform: Mesh, terrain: DynamicTerrain | undefined, scene: Scene, setMovementState: Dispatch<SetStateAction<MovementState>>, createPhysics: () => PhysicsImpostor | undefined) => void;
+export type MovementUpdateFunction = (deltaS: number, transform: Mesh, terrain: DynamicTerrain | undefined, scene: Scene, movementStateRef: MutableRefObject<MovementState>, createPhysics: () => PhysicsImpostor | undefined) => void;
 
 export const PlayerMovement: React.FC = ({ children }) => {
     const xrCamera = useXRCamera();
     const sphereRef = useRef<Mesh>()
 
-    const [movementState, setMovementState] = useState<MovementState>("walking")
+    const movementStateRef = useRef<MovementState>("walking")
 
     const { terrain, terrainPhysicsImpostor } = useContext(TerrainContext)
 
     const onCollision = useCallback(() => {
-        setMovementState("walking")
+        movementStateRef.current = "walking";
         if (!sphereRef.current?.physicsImpostor) return;
         sphereRef.current.physicsImpostor.dispose()
         sphereRef.current.physicsImpostor = null;
@@ -40,14 +40,14 @@ export const PlayerMovement: React.FC = ({ children }) => {
 
     useDeltaBeforeRender((scene, deltaS) => {
         if (!sphereRef.current) return
-        switch (movementState) {
+        switch (movementStateRef.current) {
             case "walking":
-                doWalking(deltaS, sphereRef.current, terrain, scene, setMovementState, createPhysics)
+                doWalking(deltaS, sphereRef.current, terrain, scene, movementStateRef, createPhysics)
                 break;
             case "falling":
                 break;
             default:
-                throw new Error("movement state not implemented: " + movementState)
+                throw new Error("movement state not implemented: " + movementStateRef.current)
         }
         // const FORWARD = keyObject.metaDownKeys['FORWARD'];
         // const BACK = keyObject.metaDownKeys['BACK'];
