@@ -1,7 +1,8 @@
 import { Scalar } from '@babylonjs/core';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useBeforeRender } from 'react-babylonjs';
-import { modRange } from '../utils/MathUtils';
+import { useAfterRender, useBeforeRender } from 'react-babylonjs';
+import { movementStateRef } from '../player/PlayerMovement';
+import { modDist, modRange } from '../utils/MathUtils';
 
 const defaultKeyMap = {
     27: 'MENU',
@@ -44,11 +45,15 @@ const makeDefaultDownKeyMap = () => {
 };
 
 interface KeyObject {
+    keyDeltas: KeyDown;
+    lastMetaDownKeys: KeyDown
     metaDownKeys: KeyDown;
     disabledMap: KeyDown;
 }
 
 export const keyObject: KeyObject = {
+    keyDeltas: makeDefaultDownKeyMap(),
+    lastMetaDownKeys: makeDefaultDownKeyMap(),
     metaDownKeys: makeDefaultDownKeyMap(),
     disabledMap: {
         lookX: 0,
@@ -137,6 +142,7 @@ export const useControlsContext = (outsideOfRenderer: boolean) => {
 
             const newMetaDownKeys = { ...keyObject.metaDownKeys };
             newMetaDownKeys[key] = true;
+
             keyObject.metaDownKeys = newMetaDownKeys;
         },
         [disabled, keyMap, typing],
@@ -167,8 +173,8 @@ export const useControlsContext = (outsideOfRenderer: boolean) => {
         const newMetaDownKeys = { ...keyObject.metaDownKeys };
         newMetaDownKeys["lookX"] += event.movementX / window.innerWidth;
         newMetaDownKeys["lookY"] += event.movementY / window.innerHeight;
-        newMetaDownKeys["lookX"] = modRange(newMetaDownKeys["lookX"], -Math.PI, Math.PI)
-        newMetaDownKeys["lookY"] = Scalar.Clamp(newMetaDownKeys["lookY"], -Math.PI / 2, Math.PI / 2)
+        newMetaDownKeys["lookX"] = modRange(newMetaDownKeys["lookX"], -1, 1)
+        newMetaDownKeys["lookY"] = movementStateRef.current === "flying" ? modRange(newMetaDownKeys["lookY"], -1, 1) : Scalar.Clamp(newMetaDownKeys["lookY"], -1, 1)
         keyObject.metaDownKeys = newMetaDownKeys;
     }, [])
 
@@ -197,6 +203,19 @@ export const useControlsContext = (outsideOfRenderer: boolean) => {
     useBeforeRender(() => {
         setDownKeys(keyObject.metaDownKeys);
     });
+
+    useAfterRender(() => {
+        for (const key in keyObject.metaDownKeys) {
+            if (["lookY", "lookX"].includes(key)) {
+                keyObject.keyDeltas[key] = modDist(+keyObject.lastMetaDownKeys[key] + 1, +keyObject.metaDownKeys[key] + 1, 2);
+            }
+            else {
+                keyObject.keyDeltas[key] = (+keyObject.metaDownKeys[key]) - (+keyObject.lastMetaDownKeys[key])
+            }
+
+        }
+        keyObject.lastMetaDownKeys = { ...keyObject.metaDownKeys }
+    })
 
     return {
         keyMap,

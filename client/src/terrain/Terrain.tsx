@@ -5,19 +5,23 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { TerrainContext } from '../containers/TerrainContext';
 import { DynamicTerrain } from '../forks/DynamicTerrain';
-import { ENABLE_PHYSICS } from '../utils/Switches';
+import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
+import { SkyBox } from './SkyBox';
+import { Trees } from './Trees';
 
-const mapSize = 1000;
-const heightScale = 50;
+const mapSize = 5000;
+const heightScale = mapSize / 20;
 const resolution = 1024;
 
-const mapColorIntervals = [0, 0.01, 0.03, 0.6, 1.3];
+const mapColorIntervals = [0, 0.01, 0.03, 0.5, 0.6, 0.7, 1.3];
 const mapColorsList = [
     new Color3(0, 0, 1),
     new Color3(0.8, 0.8, 0.5),
     new Color3(0, 1, 0),
+    new Color3(0, 1, 0),
     new Color3(0.7, 0.3, 0),
     new Color3(0.7, 0.5, 0.3),
+    new Color3(0.7, 0.5, 0.3)
 ];
 
 const getColor = (height: number) => {
@@ -31,27 +35,25 @@ const getColor = (height: number) => {
 
 
 
-const LODLimits = [resolution / 8, resolution / 16, resolution / 32];
+const LODLimits = [resolution / 8, resolution / 16, resolution / 32, resolution / 64];
 
 export const Terrain = () => {
     const scene = useScene();
-    const { terrain, setTerrain, setTerrainPhysicsImpostor } = useContext(TerrainContext)
+    const { terrain, setTerrain, setGround } = useContext(TerrainContext)
 
     useEffect(() => {
         if (!scene) return;
-        let collisionTerrain: Mesh;
-        if (ENABLE_PHYSICS) {
-            collisionTerrain = Mesh.CreateGroundFromHeightMap("collisionTerrain", '/terrain/height.png', mapSize, mapSize, resolution, 0, heightScale, scene, false, function () {
-                collisionTerrain.physicsImpostor = new PhysicsImpostor(collisionTerrain, PhysicsImpostor.HeightmapImpostor, { mass: 0, friction: 1 });
-                setTerrainPhysicsImpostor(collisionTerrain.physicsImpostor)
-            });
-            collisionTerrain.isVisible = false;
-        }
+        const collisionTerrain = Mesh.CreateGroundFromHeightMap("collisionTerrain", '/terrain/height.png', mapSize, mapSize, resolution, 0, heightScale, scene, false, function () {
+            collisionTerrain.physicsImpostor = new PhysicsImpostor(collisionTerrain, PhysicsImpostor.HeightmapImpostor, { mass: 0, friction: 1 });
+            collisionTerrain.updateCoordinateHeights()
+            setGround(collisionTerrain)
+        });
+        collisionTerrain.isVisible = false;
 
         return () => {
-            if (collisionTerrain) collisionTerrain.dispose()
+            collisionTerrain.geometry?.dispose()
         }
-    }, [scene, setTerrainPhysicsImpostor])
+    }, [scene, setGround])
 
     const [mapData, setMapData] = useState<Float32Array>()
     useEffect(() => {
@@ -107,6 +109,7 @@ export const Terrain = () => {
         })
         const terrainMat = new PBRMetallicRoughnessMaterial("terrainMat", scene)
         terrainMat.roughness = 0.9
+        terrainMat.useLogarithmicDepth = true;
         terrain.mesh.material = terrainMat
 
         terrain.subToleranceX = 20;
@@ -114,6 +117,7 @@ export const Terrain = () => {
         terrain.LODLimits = LODLimits;
         terrain.mesh.position.y = -0.1
         terrain.update(true)
+        scene.createOrUpdateSelectionOctree(MAX_MESHES_IN_SCENE)
 
         setTerrain(terrain)
 
@@ -128,6 +132,7 @@ export const Terrain = () => {
         if (!planeRef.current || !scene || !terrain) return;
 
         const water = new StandardMaterial("water", scene)
+        water.useLogarithmicDepth = true;
         water.diffuseColor = new Color3(0.5, 0.8, 1.0);
         water.alpha = 0.9
 
@@ -136,6 +141,8 @@ export const Terrain = () => {
     }, [terrain, scene])
 
     return <>
+        <SkyBox />
+        <Trees mapSize={mapSize} heightScale={heightScale} />
         <ground position-y={heightScale * 0.16} ref={planeRef} width={mapSize * 2} height={mapSize * 2} name="water" />
     </>
 };

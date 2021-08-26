@@ -1,108 +1,92 @@
-import { Mesh, PhysicsImpostor, Quaternion, Scene, Vector3 } from '@babylonjs/core';
-import React, { MutableRefObject, useCallback, useContext, useRef } from 'react';
+import { Mesh, PhysicsImpostor, Quaternion, Scene, TransformNode, Vector3 } from '@babylonjs/core';
+import { GroundMesh } from '@babylonjs/core/Meshes/groundMesh';
+import React, { MutableRefObject, useCallback, useContext, useEffect, useState } from 'react';
+import { OctreeContext } from '../containers/OctreeContext';
 import { TerrainContext } from '../containers/TerrainContext';
-import { DynamicTerrain } from '../forks/DynamicTerrain';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
 import { useXRCamera } from '../hooks/useXR';
-import { ENABLE_PHYSICS } from '../utils/Switches';
+import { MovementState } from './Player';
+import { doFalling } from './playerMovement/Falling';
+import { doFloating } from './playerMovement/Floating';
+import { doFlying } from './playerMovement/Flying';
 import { doWalking } from './playerMovement/Walking';
 
-const playerPosition = new Vector3(0, 50, 0)
+const playerPosition = new Vector3(0, 500, 0)
 
-export type MovementState = "walking" | "falling" | "flying";
-export type MovementUpdateFunction = (deltaS: number, transform: Mesh, terrain: DynamicTerrain | undefined, scene: Scene, movementStateRef: MutableRefObject<MovementState>, createPhysics: () => PhysicsImpostor | undefined) => void;
+export const movementStateRef: MutableRefObject<MovementState> = {
+    current: "walking"
+}
 
-export const PlayerMovement: React.FC = ({ children }) => {
+export type MovementUpdateFunction = (deltaS: number, transform: Mesh, ground: GroundMesh | undefined, head: TransformNode, scene: Scene, createPhysics: () => PhysicsImpostor | undefined) => void;
+
+interface PlayerMovementProps {
+    head: MutableRefObject<TransformNode | undefined>
+}
+
+export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }) => {
     const xrCamera = useXRCamera();
-    const sphereRef = useRef<Mesh>()
+    const [sphere, setSphere] = useState<Mesh>()
+    const { octree } = useContext(OctreeContext)
+    useEffect(() => {
+        if (sphere && octree) {
+            octree.dynamicContent.push(sphere);
+            const _sphere = sphere;
+            return () => {
+                if (!octree) return;
+                octree.dynamicContent = octree.dynamicContent.filter(elem => elem !== _sphere)
+            }
+        }
+    }, [sphere, octree])
 
-    const movementStateRef = useRef<MovementState>("walking")
-
-    const { terrain, terrainPhysicsImpostor } = useContext(TerrainContext)
+    const { ground } = useContext(TerrainContext);
 
     const onCollision = useCallback(() => {
         movementStateRef.current = "walking";
-        if (!sphereRef.current?.physicsImpostor) return;
-        sphereRef.current.physicsImpostor.dispose()
-        sphereRef.current.physicsImpostor = null;
-    }, [])
+        if (!sphere?.physicsImpostor || !head.current) return;
+        sphere.physicsImpostor.dispose()
+        sphere.physicsImpostor = null;
+        head.current.position = new Vector3(0, 1.88, 0);
+    }, [head, sphere])
 
     const createPhysics = useCallback(() => {
-        if (!sphereRef.current || !terrainPhysicsImpostor || !ENABLE_PHYSICS) return;
-        const newPhysicsImpostor = new PhysicsImpostor(sphereRef.current, PhysicsImpostor.SphereImpostor, {
+        if (!sphere || !ground) return;
+        const newPhysicsImpostor = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, {
             mass: 1,
             restitution: 0.9,
             friction: 1,
         })
-        newPhysicsImpostor.registerOnPhysicsCollide(terrainPhysicsImpostor, onCollision)
+        newPhysicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor as PhysicsImpostor, onCollision)
+        newPhysicsImpostor.physicsBody.angularDamping = 1;
         return newPhysicsImpostor
-    }, [onCollision, terrainPhysicsImpostor])
+    }, [sphere, ground, onCollision])
 
     useDeltaBeforeRender((scene, deltaS) => {
-        if (!sphereRef.current) return
+        if (!sphere || !head.current) return
+
         switch (movementStateRef.current) {
             case "walking":
-                doWalking(deltaS, sphereRef.current, terrain, scene, movementStateRef, createPhysics)
+                doWalking(deltaS, sphere, ground, head.current, scene, createPhysics)
                 break;
             case "falling":
+                doFalling(deltaS, sphere, ground, head.current, scene, createPhysics)
+                break;
+            case "floating":
+                doFloating(deltaS, sphere, ground, head.current, scene, createPhysics)
+                break;
+            case "flying":
+                doFlying(deltaS, sphere, ground, head.current, scene, createPhysics)
                 break;
             default:
                 throw new Error("movement state not implemented: " + movementStateRef.current)
         }
-        // const FORWARD = keyObject.metaDownKeys['FORWARD'];
-        // const BACK = keyObject.metaDownKeys['BACK'];
-        // const LEFT = keyObject.metaDownKeys['LEFT'];
-        // const RIGHT = keyObject.metaDownKeys['RIGHT'];
-        // const UP = keyObject.metaDownKeys['JUMP'];
-        // const DOWN = keyObject.metaDownKeys['CROUCH'];
 
-        // let forwardVec = Vector3.Zero();
+        if (movementStateRef.current !== "flying") {
+            sphere.rotationQuaternion = new Quaternion()
+        }
 
-        // if (xrCamera) {
-        //     forwardVec = xrCamera.getForwardRay().direction;
-        //     forwardVec.y = 0;
-        // } else {
-        //     if (!scene.activeCamera) return
-        //     forwardVec = scene.activeCamera.getForwardRay().direction
-        //     forwardVec.y = 0;
-
-        // }
-
-        // forwardVec.normalize()
-        // const rightVec = forwardVec.cross(Vector3.Up()).scale(-1)
-
-        // const applyDirection = (delta: Vector3) => {
-        //     if (!sphereRef.current) return;
-        //     if (ENABLE_PHYSICS) {
-        //         if (!playerPhysicsRef.current) return;
-        //         playerPhysicsRef.current.applyForce(delta.scale(10), sphereRef.current.getAbsolutePosition())
-        //     }
-        //     else {
-        //         sphereRef.current.position.addInPlace(delta)
-        //     }
-        // }
-
-        // if (xrCamera) {
-        //     if (FORWARD) xrCamera.position.addInPlace(Vector3.Forward().scale(deltaS * LATERAL_SPEED * +FORWARD));
-        //     if (BACK) xrCamera.position.addInPlace(Vector3.Backward().scale(deltaS * LATERAL_SPEED * +BACK));
-        //     if (LEFT) xrCamera.position.addInPlace(Vector3.Left().scale(deltaS * LATERAL_SPEED * +LEFT));
-        //     if (RIGHT) xrCamera.position.addInPlace(Vector3.Right().scale(deltaS * LATERAL_SPEED * +RIGHT));
-        // } else {
-
-        //     if (FORWARD) applyDirection(forwardVec.scale(deltaS * LATERAL_SPEED * +FORWARD))
-        //     if (BACK) applyDirection(forwardVec.scale(-deltaS * LATERAL_SPEED * +BACK));
-        //     if (LEFT) applyDirection(rightVec.scale(-deltaS * LATERAL_SPEED * +LEFT));
-        //     if (RIGHT) applyDirection(rightVec.scale(deltaS * LATERAL_SPEED * +RIGHT));
-        //     if (CREATIVE) {
-        //         if (UP) applyDirection(Vector3.Up().scale(deltaS * LATERAL_SPEED * +UP));
-        //         if (DOWN) applyDirection(Vector3.Up().scale(-deltaS * LATERAL_SPEED * +DOWN));
-        //     }
-        // }
-
-        sphereRef.current.rotationQuaternion = new Quaternion()
     });
 
-    return <sphere name="cameraPosition" diameter={0.5} segments={4} ref={sphereRef} position={playerPosition}>
+    return <sphere name="cameraPosition" diameter={0.5} segments={4} ref={(sphere: Mesh) => setSphere(sphere)} position={playerPosition}>
         {children}
     </sphere>;
 };

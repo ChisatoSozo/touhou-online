@@ -3,9 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useBeforeRender, useScene } from 'react-babylonjs';
 import { useOnline } from './hooks/useOnline';
 import { useRig } from './hooks/useRig';
+import { Player } from './player/Player';
 import { PlayerAvatar } from './player/PlayerAvatar';
-import { PlayerCamera } from './player/PlayerCamera';
-import { PlayerMovement } from './player/PlayerMovement';
 import { protoRig } from './utils/ProtoUtils';
 
 const username = [Math.random(), Math.random(), Math.random()].join(',');
@@ -21,6 +20,8 @@ export const World = () => {
     });
 
     useEffect(() => {
+        //INIT WORLD
+        if (!scene) return;
         SceneLoader.LoadAssetContainer('/avatars/Dude/', 'Dude.babylon', scene, function (container) {
             setContainer(container);
         });
@@ -28,11 +29,7 @@ export const World = () => {
 
     return (
         <>
-            <PlayerMovement>
-                <PlayerCamera />
-                <PlayerAvatar rig={rig} assetContainer={container} />
-            </PlayerMovement>
-
+            <Player />
             {worldState &&
                 worldState.playersList.map(
                     (player) =>

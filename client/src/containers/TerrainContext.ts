@@ -1,13 +1,13 @@
 
-import { PhysicsImpostor } from '@babylonjs/core';
+import { GroundMesh } from '@babylonjs/core';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { DynamicTerrain } from '../forks/DynamicTerrain';
 
 interface ITerrainContext {
     terrain: DynamicTerrain | undefined;
     setTerrain: Dispatch<SetStateAction<DynamicTerrain | undefined>>;
-    terrainPhysicsImpostor: PhysicsImpostor | undefined;
-    setTerrainPhysicsImpostor: Dispatch<SetStateAction<PhysicsImpostor | undefined>>;
+    ground: GroundMesh | undefined;
+    setGround: Dispatch<SetStateAction<GroundMesh | undefined>>;
 }
 
 export const TerrainContext = React.createContext<ITerrainContext>({
@@ -15,15 +15,15 @@ export const TerrainContext = React.createContext<ITerrainContext>({
     setTerrain: () => {
         return;
     },
-    terrainPhysicsImpostor: undefined,
-    setTerrainPhysicsImpostor: () => {
+    ground: undefined,
+    setGround: () => {
         return;
     }
 });
 
 export const useTerrainContext = () => {
     const [terrain, setTerrain] = useState<DynamicTerrain>()
-    const [terrainPhysicsImpostor, setTerrainPhysicsImpostor] = useState<PhysicsImpostor>()
+    const [ground, setGround] = useState<GroundMesh>();
 
-    return { terrain, setTerrain, terrainPhysicsImpostor, setTerrainPhysicsImpostor };
+    return { terrain, setTerrain, ground, setGround };
 };

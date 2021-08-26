@@ -1,5 +1,6 @@
 import React from 'react';
 import { ControlsContext, useControlsContext } from './ControlsContext';
+import { OctreeContext, useOctreeContext } from './OctreeContext';
 import { TerrainContext, useTerrainContext } from './TerrainContext';
 import { useXRContext, XRContext } from './XRContext';
 
@@ -12,12 +13,15 @@ export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnable
     const controls = useControlsContext(false);
     const xr = useXRContext(xrEnabled);
     const terrain = useTerrainContext();
+    const octree = useOctreeContext();
 
     return (
         <ControlsContext.Provider value={controls}>
             <XRContext.Provider value={xr}>
                 <TerrainContext.Provider value={terrain}>
-                    {children}
+                    <OctreeContext.Provider value={octree}>
+                        {children}
+                    </OctreeContext.Provider>
                 </TerrainContext.Provider>
             </XRContext.Provider>
         </ControlsContext.Provider>

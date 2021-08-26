@@ -1,16 +1,23 @@
-import { Color3, Matrix, Quaternion, Texture, Vector3 } from '@babylonjs/core';
-import React, { useRef } from 'react';
+import { Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
+import React, { MutableRefObject } from 'react';
 import { useBeforeRender } from 'react-babylonjs';
 import { keyObject } from '../containers/ControlsContext';
+import { movementStateRef } from './PlayerMovement';
 
-export const PlayerCamera = () => {
-    const cameraRef = useRef();
+const cameraPosition = new Vector3(0, 1.88, 0);
+
+interface PlayerCameraProps {
+    head: MutableRefObject<TransformNode | undefined>
+}
+
+export const PlayerCamera: React.FC<PlayerCameraProps> = ({ head }) => {
 
     useBeforeRender(() => {
-        if (!cameraRef.current) return;
+        if (!head.current) return;
+        if (movementStateRef.current === "flying") return;
 
-        const upM = Matrix.RotationX(keyObject.metaDownKeys.lookY);
-        const rightM = Matrix.RotationY(keyObject.metaDownKeys.lookX);
+        const upM = Matrix.RotationX(keyObject.metaDownKeys.lookY * Math.PI / 2);
+        const rightM = Matrix.RotationY(keyObject.metaDownKeys.lookX * Math.PI);
 
         const matrix = Matrix.Identity().multiply(upM).multiply(rightM);
 
@@ -19,19 +26,13 @@ export const PlayerCamera = () => {
 
         matrix.decompose(_, rotation);
 
-        //@ts-ignore
-        cameraRef.current.rotationQuaternion = rotation;
+        head.current.rotationQuaternion = rotation;
     });
 
     return (
         <>
-            <box name="skybox" size={1000}>
-                <standardMaterial name="skyMat" disableLighting={true} backFaceCulling={false} diffuseColor={new Color3(0, 0, 0)} specularColor={new Color3(0, 0, 0)}>
-                    <cubeTexture name="skyTexture" assignTo="reflectionTexture" coordinatesMode={Texture.SKYBOX_MODE} rootUrl="/terrain/skybox/TropicalSunnyDay" />
-                </standardMaterial>
-            </box>
-            <transformNode name="cameraTransform" ref={cameraRef} position={new Vector3(0, 1.88, 0)}>
-                <targetCamera fov={1.0472} name="camera" minZ={0.01} maxZ={1000} position={new Vector3(0, 0, 0)} />
+            <transformNode name="cameraTransform" ref={head} position={cameraPosition}>
+                <targetCamera fov={1.0472} name="camera" minZ={0.01} maxZ={10000} position={new Vector3(0, 0, 0)} />
             </transformNode>
         </>
     );
