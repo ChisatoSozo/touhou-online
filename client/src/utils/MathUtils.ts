@@ -25,3 +25,11 @@ export const extractBasis = (quat: Quaternion) => {
         forward: Vector3.TransformCoordinates(Vector3.Forward(), matrix),
     }
 }
+
+export const blerp = (values: number[][], x1: number, y1: number, x2: number, y2: number, x: number, y: number) => {
+    const q11 = (((x2 - x) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * values[x1][y1]
+    const q21 = (((x - x1) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * values[x2][y1]
+    const q12 = (((x2 - x) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * values[x1][y2]
+    const q22 = (((x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * values[x2][y2]
+    return q11 + q21 + q12 + q22
+}

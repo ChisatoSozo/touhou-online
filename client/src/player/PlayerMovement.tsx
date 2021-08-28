@@ -1,10 +1,13 @@
 import { Mesh, PhysicsImpostor, Quaternion, Scene, TransformNode, Vector3 } from '@babylonjs/core';
-import { GroundMesh } from '@babylonjs/core/Meshes/groundMesh';
 import React, { MutableRefObject, useCallback, useContext, useEffect, useState } from 'react';
+import { useScene } from 'react-babylonjs';
 import { OctreeContext } from '../containers/OctreeContext';
 import { TerrainContext } from '../containers/TerrainContext';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
 import { useXRCamera } from '../hooks/useXR';
+import { TerrainMesh } from '../terrain/TerrainMesh';
+import { LOG_DEPTH } from '../utils/Switches';
+import { snapVecToTerrain } from '../utils/WorldUtils';
 import { MovementState } from './Player';
 import { doFalling } from './playerMovement/Falling';
 import { doFloating } from './playerMovement/Floating';
@@ -17,7 +20,7 @@ export const movementStateRef: MutableRefObject<MovementState> = {
     current: "walking"
 }
 
-export type MovementUpdateFunction = (deltaS: number, transform: Mesh, ground: GroundMesh | undefined, head: TransformNode, scene: Scene, createPhysics: () => PhysicsImpostor | undefined) => void;
+export type MovementUpdateFunction = (deltaS: number, transform: Mesh, ground: TerrainMesh | undefined, head: TransformNode, scene: Scene, createPhysics: () => PhysicsImpostor | undefined) => void;
 
 interface PlayerMovementProps {
     head: MutableRefObject<TransformNode | undefined>
@@ -27,6 +30,7 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
     const xrCamera = useXRCamera();
     const [sphere, setSphere] = useState<Mesh>()
     const { octree } = useContext(OctreeContext)
+    const scene = useScene()
     useEffect(() => {
         if (sphere && octree) {
             octree.dynamicContent.push(sphere);
@@ -49,19 +53,24 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
     }, [head, sphere])
 
     const createPhysics = useCallback(() => {
-        if (!sphere || !ground) return;
+        if (!sphere || !ground || !scene) return;
         const newPhysicsImpostor = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, {
             mass: 1,
             restitution: 0.9,
             friction: 1,
         })
-        newPhysicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor as PhysicsImpostor, onCollision)
+        // newPhysicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor as PhysicsImpostor, onCollision)
         newPhysicsImpostor.physicsBody.angularDamping = 1;
         return newPhysicsImpostor
-    }, [sphere, ground, onCollision])
+    }, [sphere, ground, scene])
 
     useDeltaBeforeRender((scene, deltaS) => {
-        if (!sphere || !head.current) return
+        if (!sphere || !head.current || !ground) return
+
+        const feetPos = sphere.position.subtract(new Vector3(0, 0.5, 0));
+        const terrainPos = feetPos.clone()
+        snapVecToTerrain(ground, terrainPos)
+        if (feetPos.y < terrainPos.y && movementStateRef.current !== "walking") onCollision();
 
         switch (movementStateRef.current) {
             case "walking":
@@ -86,7 +95,8 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
 
     });
 
-    return <sphere name="cameraPosition" diameter={0.5} segments={4} ref={(sphere: Mesh) => setSphere(sphere)} position={playerPosition}>
+    return <sphere isVisible={false} name="cameraPosition" diameter={0.5} segments={4} ref={(sphere: Mesh) => setSphere(sphere)} position={playerPosition}>
+        <standardMaterial name="playerMat" useLogarithmicDepth={LOG_DEPTH} />
         {children}
     </sphere>;
 };

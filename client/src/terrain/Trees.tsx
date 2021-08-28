@@ -6,6 +6,7 @@ import { useScene } from 'react-babylonjs';
 import { TerrainContext } from '../containers/TerrainContext';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { simplex } from '../utils/Noise';
+import { LOG_DEPTH } from '../utils/Switches';
 import { snapToTerrain, snapVecToTerrain } from '../utils/WorldUtils';
 
 const makeTree = (canopies: number, height: number, trunkMaterial: Material, leafMaterial: Material, scene: Scene) => {
@@ -51,11 +52,12 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
         if (!scene || !ground) return
         const trunkMaterial = new StandardMaterial("", scene)
         trunkMaterial.diffuseColor = new Color3(0.5, 0.25, 0);
-        trunkMaterial.useLogarithmicDepth = true;
+        trunkMaterial.useLogarithmicDepth = LOG_DEPTH;
         const leafMaterial = new StandardMaterial("", scene)
         leafMaterial.diffuseColor = new Color3(0.2, 1.0, 0.1);
-        leafMaterial.useLogarithmicDepth = true;
+        leafMaterial.useLogarithmicDepth = LOG_DEPTH;
         const tree = makeTree(4, 20, trunkMaterial, leafMaterial, scene);
+        tree.scaling = new Vector3(0.5, 0.5, 0.5)
         tree.isVisible = false
         // tree.addLODLevel(1000, null);
         snapToTerrain(ground, tree), 1;
@@ -70,7 +72,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
             const treeVec = new Vector3(x, 0, z)
             snapVecToTerrain(ground, treeVec, 1)
 
-            if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.2) continue;
+            if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345) continue;
 
             const intersects = tree.instances.some(instance => instance.position.subtract(treeVec).lengthSquared() < 64)
             if (intersects) continue;

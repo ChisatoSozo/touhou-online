@@ -27,8 +27,9 @@ export const doWalking: MovementUpdateFunction = (deltaS, mesh, ground, head, sc
     const newVec = mesh.position.add(displacementVec)
     snapVecToTerrain(ground, newVec, 0.5)
 
+
     const delta = newVec.subtract(mesh.position)
-    if (!delta.equals(Vector3.Zero())) {
+    if (!delta.equals(Vector3.Zero()) && !ground.isUnderground(mesh.position)) {
         if (delta.y / new Vector2(delta.x, delta.z).length() > WALK_MAX_SLOPE) return;
     }
 

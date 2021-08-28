@@ -1,7 +1,7 @@
 import { noise } from './noise';
 import { elevationRescaling, worldCreator } from './worldCreator';
 
-export const makeTerrain = (npoints, seed = Math.round(65536 * Math.random())) => {
+export const makeTerrain = (npoints, seed = Math.round(HEIGHTMAP_MAX_HEIGHT * Math.random())) => {
     // Initiating Perlin noise
     noise.seed(seed);
 

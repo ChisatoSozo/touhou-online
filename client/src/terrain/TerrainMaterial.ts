@@ -1,8 +1,10 @@
-import { Scene } from "@babylonjs/core";
+import { Color3, Scene } from "@babylonjs/core";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { RawTexture } from "@babylonjs/core/Materials/Textures/rawTexture";
-import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { CustomMaterial } from "../forks/CustomMaterial";
+import { HEIGHTMAP_MAX_HEIGHT } from "../utils/Constants";
+import { glsl } from "../utils/MaterialUtils";
+import { LOG_DEPTH, SMOOTH_TERRAIN } from "../utils/Switches";
 
 const vertexShader = `
 #include<__decl__defaultVertex>
@@ -654,32 +656,109 @@ color.rgb = max(color.rgb, 0.);
 }
 `
 
-export const createTerrainMaterial = async (heightmapEndpoint: string, scene: Scene) => {
-    const material = new CustomMaterial("myMaterial", scene) as CustomMaterial;
-    const data: { data: number[] } = await fetch(heightmapEndpoint, { mode: 'cors' }).then(response => response.json());
-    const heightData = new Float32Array(data.data.length * 4)
-    data.data.forEach((datum, i) => {
-        heightData[i * 4] = datum;
-        heightData[i * 4 + 1] = datum;
-        heightData[i * 4 + 2] = datum;
-        heightData[i * 4 + 3] = datum;
-    })
-    const resolution = Math.sqrt(data.data.length)
+export const createTerrainMaterial = async (heightmapEndpoint: string, size: number, height: number, scene: Scene) => {
+	if (!scene.activeCamera) throw new Error("Attempt to construct material with no active camera")
+	const material = new CustomMaterial("myMaterial", scene) as CustomMaterial;
+	const data: { data: number[] } = await fetch(heightmapEndpoint, { mode: 'cors' }).then(response => response.json());
+	const heightData = new Float32Array(data.data.length * 4)
+	data.data.forEach((datum, i) => {
+		heightData[i * 4] = datum / HEIGHTMAP_MAX_HEIGHT;
+		heightData[i * 4 + 1] = datum / HEIGHTMAP_MAX_HEIGHT;
+		heightData[i * 4 + 2] = datum / HEIGHTMAP_MAX_HEIGHT;
+		heightData[i * 4 + 3] = datum / HEIGHTMAP_MAX_HEIGHT;
+	})
+	const resolution = Math.sqrt(data.data.length)
 
-    const heightTexture = RawTexture.CreateRGBATexture(heightData, resolution, resolution, scene, false, false, undefined, Engine.TEXTURETYPE_FLOAT);
-    material.AddUniform("heightmap", "sampler2D", heightTexture);
-    material.Vertex_Before_PositionUpdated(
-        `
-float x = positionUpdated.x;
-float z = positionUpdated.z;
-vec2 uv = vec2(x + 0.5, z + 0.5);
-float height = texture(heightmap, uv).x / 300000.;
-positionUpdated.y = height;
-`
-    )
+	const logRes = Math.log2(resolution - 1)
+	if (logRes !== Math.floor(logRes)) {
+		throw new Error("heightmap must be one more than a power of two, is: " + resolution)
+	}
 
-    material.useLogarithmicDepth = true;
-    material.specularPower = 0;
-    material.diffuseColor = new Color3(0.2, 0.2, 0.2)
-    return { resolution, material }
+	const heightTexture = RawTexture.CreateRGBATexture(heightData, resolution, resolution, scene, false, false, undefined, Engine.TEXTURETYPE_FLOAT);
+	material.AddUniform("heightmap", "sampler2D", heightTexture);
+	material.AddUniform("size", "float", size);
+	material.AddUniform("resolution", "float", resolution);
+	material.AddUniform("heightScale", "float", height);
+	material.AddUniform("cameraPosition", "vec3", scene.activeCamera.globalPosition);
+	console.log(size, height)
+
+	material.Vertex_Definitions(glsl`
+		varying vec3 vPositionHMap;
+	`)
+
+	material.Vertex_Before_PositionUpdated(glsl`
+		float squareSize = 1.;
+		float oneSquare = squareSize * 20.;
+
+		vec3 updatedCamera = (cameraPosition)
+			/ vec3(size, size, size)
+			* vec3(resolution, resolution, resolution);
+
+		positionUpdated.x += round(updatedCamera.x / oneSquare) * oneSquare;
+		positionUpdated.z += round(updatedCamera.z / oneSquare) * oneSquare;
+
+		vec2 terrainCoord = vec2(positionUpdated.z + 0.5, positionUpdated.x + 0.5);
+		vec2 uv = terrainCoord/vec2(resolution, resolution);
+		float height = texture(heightmap, uv).x;
+		vPositionHMap = positionUpdated.xyz + vec3(0., height * heightScale, 0.);
+		positionUpdated.y += height * heightScale;
+	`)
+
+
+	if (SMOOTH_TERRAIN) material.Vertex_Before_NormalUpdated(glsl`
+		float cellSize = size*size/resolution*resolution;
+
+		float l = texture(heightmap, vec2(uv.x - 1./resolution, uv.y)).x * heightScale;
+		float u = texture(heightmap, vec2(uv.x, uv.y + 1./resolution)).x * heightScale;
+		float r = texture(heightmap, vec2(uv.x + 1./resolution, uv.y)).x * heightScale;
+		float d = texture(heightmap, vec2(uv.x, uv.y - 1./resolution)).x * heightScale;
+
+		vec3 vu = vec3(0, u, cellSize);
+		vec3 vd = vec3(0, d, -cellSize);
+		vec3 vr = vec3(cellSize, r, 0);
+		vec3 vl = vec3(-cellSize, l, 0);
+
+		normalUpdated = normalize(cross((vu - vd), (vr - vl)));
+	`)
+
+	material.Fragment_Definitions(glsl`
+		varying vec3 vPositionHMap;
+
+		float invLerp(float x, float y, float a){
+			return clamp((a - x) / (y - x), 0., 1.);
+		}
+	`)
+
+	material.Fragment_Custom_Diffuse(glsl`
+		float normHeight = vPositionHMap.y/heightScale;
+
+		vec3 grass = vec3(0., .6, .2);
+		vec3 sand = vec3(.76, .70, .50);
+		vec3 rock = vec3(.35, .3, .25);
+		vec3 snow = vec3(1.0, 1.0, 1.0);
+
+		//grass
+		vec3 ground = grass;
+
+		//becomeRock?
+		float isRock = invLerp(0.75, 0.70, vNormalW.y);
+		ground = mix(ground, rock, isRock);
+
+		//becomeSand?
+		float isSand = invLerp(0.345, 0.335, normHeight);
+		ground = mix(ground, sand, isSand);
+
+		//becomeSnow?
+		float isSnow = invLerp(0.57, 0.63, normHeight);
+		ground = mix(ground, snow, isSnow);
+
+		result = ground;
+	`)
+
+
+
+	material.useLogarithmicDepth = LOG_DEPTH;
+	material.specularColor = new Color3(0, 0, 0)
+
+	return { resolution, material, heightMap: data.data }
 }
