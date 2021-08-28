@@ -1,7 +1,9 @@
+import cors from "cors";
 import express, { Application } from "express";
-import socketIO, { Server as SocketIOServer } from "socket.io";
 import { createServer, Server as HTTPServer } from "http";
+import { Image } from 'image-js';
 import path from "path";
+import socketIO, { Server as SocketIOServer } from "socket.io";
 
 export class Server {
   private httpServer: HTTPServer;
@@ -27,12 +29,20 @@ export class Server {
   }
 
   private configureApp(): void {
+    this.app.use(cors())
     this.app.use(express.static(path.join(__dirname, "../public")));
   }
 
   private configureRoutes(): void {
-    this.app.get("/", (req, res) => {
-      res.sendFile("index.html");
+    this.app.get("/terrain", async (req, res) => {
+      let image = await Image.load(path.join(__dirname, 'resources/height_new.png'));
+      const array = [];
+      for (let i = 0; i < image.width; i++) {
+        for (let j = 0; j < image.height; j++) {
+          array.push(image.getPixelXY(i, j)[0])
+        }
+      }
+      res.json({ data: array })
     });
   }
 

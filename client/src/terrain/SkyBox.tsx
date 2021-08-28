@@ -10,7 +10,6 @@ export const SkyBox = () => {
 
     useBeforeRender(() => {
         if (!skyBoxRef.current || !scene?.activeCamera) return;
-        console.log(scene.activeCamera.globalPosition)
         skyBoxRef.current.position.copyFrom(scene.activeCamera.globalPosition.scale(0.8))
     })
 

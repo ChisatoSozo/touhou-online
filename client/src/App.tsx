@@ -24,7 +24,7 @@ function App() {
     return (
         <Engine width={windowSize.width} height={windowSize.height} antialias canvasId="babylonJS">
             <Scene fogMode={BJSScene.FOGMODE_EXP2} fogDensity={0.0005} fogColor={skyColor3} ambientColor={skyColor3} clearColor={skyColor} enablePhysics={[gravityVector, new CannonJSPlugin()]}>
-                <directionalLight name="dl" intensity={1} direction={new Vector3(0, -0.5, 0.5)} position={new Vector3(0, 2, 0.5)}>
+                <directionalLight name="dl" intensity={0.5} direction={new Vector3(0, -0.5, 0.5)} position={new Vector3(0, 2, 0.5)}>
                     <shadowGenerator mapSize={1024} useBlurExponentialShadowMap blurKernel={32} shadowCastChildren>
                         <GameContainer xrEnabled={true}>
                             <BindControls />

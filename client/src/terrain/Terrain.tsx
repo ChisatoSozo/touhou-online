@@ -1,17 +1,17 @@
-import { Color3, PBRMetallicRoughnessMaterial, PhysicsImpostor, Scalar, StandardMaterial } from '@babylonjs/core';
-import { GroundMesh } from '@babylonjs/core/Meshes/groundMesh';
+import { Color3, PBRMetallicRoughnessMaterial, PhysicsImpostor, Scalar, Vector3 } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { TerrainContext } from '../containers/TerrainContext';
 import { DynamicTerrain } from '../forks/DynamicTerrain';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { SkyBox } from './SkyBox';
+import { createTerrainMesh } from './TerrainMesh';
 import { Trees } from './Trees';
 
 const mapSize = 5000;
 const heightScale = mapSize / 20;
-const resolution = 1024;
+const resolution = 8;
 
 const mapColorIntervals = [0, 0.01, 0.03, 0.5, 0.6, 0.7, 1.3];
 const mapColorsList = [
@@ -35,7 +35,7 @@ const getColor = (height: number) => {
 
 
 
-const LODLimits = [resolution / 8, resolution / 16, resolution / 32, resolution / 64];
+const LODLimits: number[] = [];
 
 export const Terrain = () => {
     const scene = useScene();
@@ -76,6 +76,19 @@ export const Terrain = () => {
             offsetZ: 0,
             onReady
         }, mapData, scene)
+
+
+        let customMesh: Mesh;
+
+        const makeTerrainMesh = async () => {
+            customMesh = await createTerrainMesh("http://localhost:5000/terrain", [0.1, 0.15, 0.2, 0.25, 0.3, 0.35], scene);
+            customMesh.scaling = new Vector3(5000, 5000, 5000)
+        }
+
+        makeTerrainMesh();
+        return () => {
+            customMesh.dispose();
+        }
     }, [scene]);
 
     const mapColors = useMemo(() => {
@@ -127,22 +140,22 @@ export const Terrain = () => {
         }
     }, [mapColors, mapData, scene, setTerrain]);
 
-    const planeRef = useRef<GroundMesh>();
-    useEffect(() => {
-        if (!planeRef.current || !scene || !terrain) return;
+    // const planeRef = useRef<GroundMesh>();
+    // useEffect(() => {
+    //     if (!planeRef.current || !scene || !terrain) return;
 
-        const water = new StandardMaterial("water", scene)
-        water.useLogarithmicDepth = true;
-        water.diffuseColor = new Color3(0.5, 0.8, 1.0);
-        water.alpha = 0.9
+    //     const water = new StandardMaterial("water", scene)
+    //     water.useLogarithmicDepth = true;
+    //     water.diffuseColor = new Color3(0.5, 0.8, 1.0);
+    //     water.alpha = 0.9
 
-        //@ts-ignore
-        planeRef.current.material = water;
-    }, [terrain, scene])
+    //     //@ts-ignore
+    //     planeRef.current.material = water;
+    // }, [terrain, scene])
 
     return <>
         <SkyBox />
         <Trees mapSize={mapSize} heightScale={heightScale} />
-        <ground position-y={heightScale * 0.16} ref={planeRef} width={mapSize * 2} height={mapSize * 2} name="water" />
+        {/* <ground position-y={heightScale * 0.16} ref={planeRef} width={mapSize * 2} height={mapSize * 2} name="water" /> */}
     </>
 };

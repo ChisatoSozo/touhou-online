@@ -17,9 +17,11 @@
     },
     "dependencies": {
         "@types/pngjs": "^6.0.1",
+        "cors": "^2.8.5",
         "express": "^4.17.1",
         "grpc": "^1.24.11",
         "grpc-tools": "^1.11.2",
+        "image-js": "^0.32.0",
         "pngjs": "^6.0.0",
         "protoc-gen-grpc": "^2.0.2",
         "socket.io": "^2.3.0",
