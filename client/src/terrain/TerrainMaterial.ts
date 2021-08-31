@@ -680,7 +680,7 @@ export const createTerrainMaterial = async (heightmapEndpoint: string, size: num
 	material.AddUniform("resolution", "float", resolution);
 	material.AddUniform("heightScale", "float", height);
 	material.AddUniform("cameraPosition", "vec3", scene.activeCamera.globalPosition);
-	console.log(size, height)
+	material.wireframe = true;
 
 	material.Vertex_Definitions(glsl`
 		varying vec3 vPositionHMap;
@@ -706,7 +706,7 @@ export const createTerrainMaterial = async (heightmapEndpoint: string, size: num
 
 
 	if (SMOOTH_TERRAIN) material.Vertex_Before_NormalUpdated(glsl`
-		float cellSize = size*size/resolution*resolution;
+		float cellSize = 2.*size/resolution;
 
 		float l = texture(heightmap, vec2(uv.x - 1./resolution, uv.y)).x * heightScale;
 		float u = texture(heightmap, vec2(uv.x, uv.y + 1./resolution)).x * heightScale;
@@ -720,6 +720,7 @@ export const createTerrainMaterial = async (heightmapEndpoint: string, size: num
 
 		normalUpdated = normalize(cross((vu - vd), (vr - vl)));
 	`)
+
 
 	material.Fragment_Definitions(glsl`
 		varying vec3 vPositionHMap;

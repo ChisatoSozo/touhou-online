@@ -18,7 +18,7 @@ export const Terrain = () => {
     useEffect(() => {
         if (!scene) return;
 
-        const terrain = new TerrainMesh("terrain", "http://localhost:5000/terrain", [0.1, 0.2, 0.3, 0.4], mapSize, 400, newTerrain => {
+        const terrain = new TerrainMesh("terrain", "http://localhost:5000/terrain", [0.1, 0.2, 0.3, 0.4], mapSize, heightScale, newTerrain => {
             //TODO: TerrainPhysics
             // newTerrain.physicsImpostor = new PhysicsImpostor(newTerrain, PhysicsImpostor.HeightmapImpostor, { mass: 0, friction: 1 });
             // newTerrain.physicsImpostor.forceUpdate()

@@ -315,8 +315,8 @@ export class TerrainMesh extends Mesh {
             .divideInPlace(new Vector2(this.size, this.size))
             .scaleInPlace(this.resolution - 1)
 
-        if (inPos.x < 0 || inPos.x >= this.resolution) return 0;
-        if (inPos.y < 0 || inPos.y >= this.resolution) return 0;
+        if (inPos.x < 0 || inPos.x > (this.resolution - 1)) return 0;
+        if (inPos.y < 0 || inPos.y > (this.resolution - 1)) return 0;
 
         const x1 = Math.floor(inPos.x);
         const x2 = Math.ceil(inPos.x)
@@ -332,7 +332,7 @@ export class TerrainMesh extends Mesh {
             return height;
         }
         catch {
-            console.log({ x1, x2, y1, y2, inPos, heightMap: this.heightMap })
+            console.log({ x1, x2, y1, y2, inPos, heightMap: this.heightMap, resolution: this.resolution })
             throw new Error("Heightmap selection error, check logs")
         }
     }
