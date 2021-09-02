@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { AbstractAssetTask, AssetsManager, ParticleHelper, ParticleSystemSet, Scene } from '@babylonjs/core';
 
 export class CustomAssetsManager extends AssetsManager {

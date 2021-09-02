@@ -11,7 +11,10 @@ interface GameContainerProps {
 }
 
 const assetPaths = [
-    "/assets/trees/Tree_1.glb"
+    "/assets/trees/Tree_1.glb",
+    "/assets/trees/Tree_2.glb",
+    "/assets/trees/Tree_3.glb",
+    "/assets/foliage/grass.glb"
 ]
 
 export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnabled }) => {

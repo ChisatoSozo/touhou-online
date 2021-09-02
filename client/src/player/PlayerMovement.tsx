@@ -4,7 +4,6 @@ import { useScene } from 'react-babylonjs';
 import { OctreeContext } from '../containers/OctreeContext';
 import { TerrainContext } from '../containers/TerrainContext';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
-import { useXRCamera } from '../hooks/useXR';
 import { TerrainMesh } from '../terrain/TerrainMesh';
 import { LOG_DEPTH } from '../utils/Switches';
 import { snapVecToTerrain } from '../utils/WorldUtils';
@@ -27,7 +26,6 @@ interface PlayerMovementProps {
 }
 
 export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }) => {
-    const xrCamera = useXRCamera();
     const [sphere, setSphere] = useState<Mesh>()
     const { octree } = useContext(OctreeContext)
     const scene = useScene()

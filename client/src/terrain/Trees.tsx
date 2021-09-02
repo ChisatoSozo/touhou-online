@@ -1,92 +1,90 @@
-import { Color3, Scalar, Scene, StandardMaterial, Vector3 } from '@babylonjs/core';
-import { Material } from '@babylonjs/core/Materials/material';
+import { Color3, MultiMaterial, Scalar, StandardMaterial, Vector3 } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { useScene } from 'react-babylonjs';
 import { TerrainContext } from '../containers/TerrainContext';
+import { useMultiModels } from '../hooks/useModel';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
+import { getRandomInt } from '../utils/MathUtils';
 import { simplex } from '../utils/Noise';
 import { LOG_DEPTH } from '../utils/Switches';
 import { snapToTerrain, snapVecToTerrain } from '../utils/WorldUtils';
-
-const makeTree = (canopies: number, height: number, trunkMaterial: Material, leafMaterial: Material, scene: Scene) => {
-    const curvePoints = (l: number, t: number) => {
-        const path = [];
-        const step = l / t;
-        for (let i = 0; i < l; i += step) {
-            path.push(new Vector3(0, i, 0));
-            path.push(new Vector3(0, i, 0));
-        }
-        return path;
-    };
-
-    const nbL = canopies + 1;
-    const nbS = height;
-    const curve = curvePoints(nbS, nbL);
-    const radiusFunction = (i: number) => {
-        let fact = 1;
-        if (i % 2 == 0) { fact = .5; }
-        const radius = (nbL * 2 - i - 1) * fact;
-        return radius;
-    };
-
-    const leaves = Mesh.CreateTube("tube", curve, 0, 10, radiusFunction, 1, scene);
-    const trunk = Mesh.CreateCylinder("trunk", nbS / nbL, nbL * 1.5 - nbL / 2 - 1, nbL * 1.5 - nbL / 2 - 1, 12, 1, scene);
-
-    leaves.material = leafMaterial;
-    trunk.material = trunkMaterial;
-
-    return Mesh.MergeMeshes([leaves, trunk], undefined, undefined, undefined, undefined, true) as Mesh;
-}
 
 interface TreesProps {
     mapSize: number
     heightScale: number
 }
 
+const treeChildPaths = [[[0, 1]], [[0, 1]], [[0, 1]]];
+const treeModels = ["Tree_1", "Tree_2", "Tree_3"];
+const treeResolution = 250;
 export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     const scene = useScene()
     const { ground } = useContext(TerrainContext)
+    const tree = useMultiModels(treeModels, treeChildPaths)
+
+    const mergedTrees = useMemo(() => {
+        if (!tree || !scene) return;
+        const outMeshes: Mesh[] = [];
+        tree.forEach(treeInst => {
+            const allMeshes: Mesh[] = [];
+            treeInst.forEach(treeMesh => {
+                allMeshes.push(treeMesh.mesh)
+            })
+
+            const outMesh = Mesh.MergeMeshes(allMeshes, undefined, undefined, undefined, undefined, true) as Mesh;
+            // outMesh.addLODLevel(500, null);
+
+            outMeshes.push(outMesh);
+        })
+        return outMeshes
+    }, [scene, tree])
 
     useEffect(() => {
-        if (!scene || !ground) return
-        const trunkMaterial = new StandardMaterial("", scene)
-        trunkMaterial.diffuseColor = new Color3(0.5, 0.25, 0);
-        trunkMaterial.useLogarithmicDepth = LOG_DEPTH;
-        const leafMaterial = new StandardMaterial("", scene)
-        leafMaterial.diffuseColor = new Color3(0.2, 1.0, 0.1);
-        leafMaterial.useLogarithmicDepth = LOG_DEPTH;
-        const tree = makeTree(4, 20, trunkMaterial, leafMaterial, scene);
-        tree.scaling = new Vector3(0.5, 0.5, 0.5)
-        tree.isVisible = false
-        // tree.addLODLevel(1000, null);
-        snapToTerrain(ground, tree), 1;
+        if (!scene || !ground || !mergedTrees) return
+        mergedTrees.forEach(mergedTree => {
+            mergedTree.scaling = new Vector3(3, 3, 3)
+            mergedTree.isVisible = false;
+            (mergedTree.material as MultiMaterial).subMaterials.forEach(mat => {
+                if (!mat) return;
+                const material = mat as StandardMaterial;
+                material.useLogarithmicDepth = LOG_DEPTH
+                material.useAlphaFromDiffuseTexture = true;
+                material.specularColor = new Color3(0, 0, 0);
+            })
+            snapToTerrain(ground, mergedTree);
+        })
 
-        for (let i = 0; i < 50000; i++) {
-            const x = Scalar.RandomRange(-mapSize / 2, mapSize / 2);
-            const z = Scalar.RandomRange(-mapSize / 2, mapSize / 2);
+        for (let i = 0; i < treeResolution; i++) {
+            for (let j = 0; j < treeResolution; j++) {
+                const x = Scalar.Lerp(-mapSize / 2, mapSize / 2, i / (treeResolution - 1)) + Scalar.RandomRange(-mapSize / (treeResolution * 2), mapSize / (treeResolution * 2));
+                const z = Scalar.Lerp(-mapSize / 2, mapSize / 2, j / (treeResolution - 1)) + Scalar.RandomRange(-mapSize / (treeResolution * 2), mapSize / (treeResolution * 2));
 
-            const treeValue = simplex.noise2D(x / 800, z / 800);
-            if (treeValue > 0.3) continue;
+                const treeValue = simplex.noise2D(x / 800, z / 800);
+                if (treeValue > 0.3) continue;
 
-            const treeVec = new Vector3(x, 0, z)
-            snapVecToTerrain(ground, treeVec, 1)
+                const treeIndex = getRandomInt(0, mergedTrees.length - 1)
+                const treeVec = new Vector3(x, 0, z)
+                snapVecToTerrain(ground, treeVec, -0.1)
 
-            if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345) continue;
+                if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345) continue;
 
-            const intersects = tree.instances.some(instance => instance.position.subtract(treeVec).lengthSquared() < 64)
-            if (intersects) continue;
+                const treeMesh = mergedTrees[treeIndex];
 
-            const newTree = tree.createInstance("tree" + i)
-            newTree.position = treeVec
+                const newTree = treeMesh.createInstance("tree" + i)
+                newTree.position = treeVec
+                newTree.scaling.scaleInPlace(Scalar.RandomRange(0.8, 1.2))
+                newTree.rotate(Vector3.Up(), Scalar.RandomRange(0, Math.PI * 2))
+                newTree.freezeWorldMatrix();
+            }
         }
 
         scene.createOrUpdateSelectionOctree(MAX_MESHES_IN_SCENE)
 
         return () => {
-            tree.dispose();
+            mergedTrees.forEach(tree => tree.dispose());
         }
 
-    }, [mapSize, scene, ground, heightScale])
+    }, [mapSize, scene, ground, tree, heightScale, mergedTrees])
     return null
 }

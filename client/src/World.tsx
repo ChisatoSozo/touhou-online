@@ -8,7 +8,7 @@ import { protoRig } from './utils/ProtoUtils';
 const username = [Math.random(), Math.random(), Math.random()].join(',');
 
 export const World = () => {
-    const { sendUpdate, worldState } = useOnline(`http://${window.location.hostname}:8080`, username);
+    const { sendUpdate } = useOnline(`http://${window.location.hostname}:8080`, username);
     const rig = useRig();
     // const scene = useScene();
     // const [container, setContainer] = useState<AssetContainer>();

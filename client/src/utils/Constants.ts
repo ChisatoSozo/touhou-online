@@ -6,3 +6,4 @@ export const DOUBLE_TAP_TIMING = 300;
 export const MAX_MESHES_IN_SCENE = 500000;
 
 export const HEIGHTMAP_MAX_HEIGHT = 65536;
+export const MAX_MESH_IN_INSTANCES = 1500000;

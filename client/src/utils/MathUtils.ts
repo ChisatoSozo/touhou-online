@@ -33,3 +33,9 @@ export const blerp = (values: number[][], x1: number, y1: number, x2: number, y2
     const q22 = (((x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * values[x2][y2]
     return q11 + q21 + q12 + q22
 }
+
+export const getRandomInt = (min: number, max: number) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}

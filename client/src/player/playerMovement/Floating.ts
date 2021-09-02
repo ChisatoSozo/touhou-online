@@ -19,7 +19,8 @@ export const doFloating: MovementUpdateFunction = (deltaS, mesh, ground, head, s
     const displacementVec = new Vector3()
 
     if (!scene.activeCamera) return
-    const forwardVec = scene.activeCamera.getForwardRay().direction
+    const forwardVec = scene.activeCamera.getForwardRay().direction.clone();
+    forwardVec.y = 0;
     forwardVec.normalize()
     const rightVec = forwardVec.cross(Vector3.Up()).scale(-1)
 

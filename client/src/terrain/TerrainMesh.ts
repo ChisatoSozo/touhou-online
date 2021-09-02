@@ -2,9 +2,11 @@ import { BoundingInfo, Mesh, Nullable, Vector3, VertexData } from "@babylonjs/co
 import { Vector2 } from "@babylonjs/core/Maths/math.vector";
 import { Observer } from "@babylonjs/core/Misc/observable";
 import { Scene } from "@babylonjs/core/scene";
+import { Assets } from "../containers/AssetContext";
 import { HEIGHTMAP_MAX_HEIGHT } from "../utils/Constants";
 import { blerp } from "../utils/MathUtils";
 import { SMOOTH_TERRAIN } from "../utils/Switches";
+import { LODGrass } from "./LODGrass";
 import { createTerrainMaterial } from "./TerrainMaterial";
 
 type SquareType = "bottomLeftCorner" |
@@ -161,18 +163,22 @@ export class TerrainMesh extends Mesh {
     public size: number;
     public height: number;
     public heightMap: number[][] | undefined;
+    public assets: Assets;
     public observer: Nullable<Observer<Scene>> = null;
+    public grass: LODGrass | undefined;
 
-    constructor(name: string, terrainEndpoint: string, lods: number[], size: number, height: number, onFinish: (ref: TerrainMesh) => void, scene: Scene) {
+    constructor(name: string, terrainEndpoint: string, lods: number[], size: number, height: number, onFinish: (ref: TerrainMesh) => void, assets: Assets, scene: Scene) {
         super(name, scene);
         this.size = size;
         this.height = height;
+        this.assets = assets;
         this.init(terrainEndpoint, lods, scene).then(() => onFinish(this))
     }
 
     private init = async (terrainEndpoint: string, lods: number[], scene: Scene) => {
-        const { resolution, material, heightMap } = await createTerrainMaterial(terrainEndpoint, this.size, this.height, scene);
+        const { resolution, material, heightMap, heightTexture } = await createTerrainMaterial(terrainEndpoint, this.size, this.height, lods, scene);
 
+        this.grass = new LODGrass(this.assets, scene, heightTexture, this.size, resolution, this.height);
         this.heightMap = []
         heightMap.forEach((height, i) => {
             if (!this.heightMap) return;
@@ -249,7 +255,13 @@ export class TerrainMesh extends Mesh {
         this.material = material;
         this.scaling = new Vector3(this.size / resolution, 1, this.size / resolution);
         this.position = new Vector3(-this.size / 2, 0, -this.size / 2);
+
         return;
+    }
+
+    public dispose(): void {
+        this.grass?.dispose();
+        super.dispose();
     }
 
 

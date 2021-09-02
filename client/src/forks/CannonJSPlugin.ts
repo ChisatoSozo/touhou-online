@@ -412,7 +412,7 @@ export class CannonJSPlugin implements IPhysicsEnginePlugin {
         return returnValue;
     }
 
-    private _createHeightmap(object: IPhysicsEnabledObject, pointDepth?: number) {
+    private _createHeightmap(object: IPhysicsEnabledObject) {
         const terrain = object as TerrainMesh;
         let boundingInfo = object.getBoundingInfo();
         var minY = boundingInfo.boundingBox.extendSizeWorld.z;

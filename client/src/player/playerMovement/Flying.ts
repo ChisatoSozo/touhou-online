@@ -5,7 +5,7 @@ import { MovementUpdateFunction } from "../PlayerMovement";
 const VELOCITY_CONVERSION_RATE = 1;
 const VELOCITY_CONVERSION_FACTOR = 0.7;
 
-export const doFlying: MovementUpdateFunction = (deltaS, mesh, ground, head, scene, createPhysicsImpostor) => {
+export const doFlying: MovementUpdateFunction = (deltaS, mesh, ground, head, scene) => {
     if (!scene.activeCamera || !mesh.physicsImpostor || !mesh.rotationQuaternion) return
 
     const xDelta = keyObject.keyDeltas["lookX"]

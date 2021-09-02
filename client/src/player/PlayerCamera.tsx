@@ -16,7 +16,7 @@ export const PlayerCamera: React.FC<PlayerCameraProps> = ({ head }) => {
         if (!head.current) return;
         if (movementStateRef.current === "flying") return;
 
-        const upM = Matrix.RotationX(keyObject.metaDownKeys.lookY * Math.PI / 2);
+        const upM = Matrix.RotationX((0.99 * keyObject.metaDownKeys.lookY) * Math.PI / 2);
         const rightM = Matrix.RotationY(keyObject.metaDownKeys.lookX * Math.PI);
 
         const matrix = Matrix.Identity().multiply(upM).multiply(rightM);
