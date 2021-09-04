@@ -1,26 +1,26 @@
 import { Color3, MultiMaterial, Scalar, StandardMaterial, Vector3 } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useScene } from 'react-babylonjs';
-import { TerrainContext } from '../containers/TerrainContext';
 import { useMultiModels } from '../hooks/useModel';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { getRandomInt } from '../utils/MathUtils';
 import { simplex } from '../utils/Noise';
 import { LOG_DEPTH } from '../utils/Switches';
-import { snapToTerrain, snapVecToTerrain } from '../utils/WorldUtils';
+import { snapToHeightmap, snapVecToHeightmap } from '../utils/WorldUtils';
+import { useTerrainData } from './TerrainDataProvider';
 
 interface TreesProps {
     mapSize: number
     heightScale: number
 }
 
-const treeChildPaths = [[[0, 1]], [[0, 1]], [[0, 1]]];
+const treeChildPaths = [[0], [0], [0]];
 const treeModels = ["Tree_1", "Tree_2", "Tree_3"];
-const treeResolution = 250;
+const treeResolution = 200;
 export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     const scene = useScene()
-    const { ground } = useContext(TerrainContext)
+    const terrainData = useTerrainData()
     const tree = useMultiModels(treeModels, treeChildPaths)
 
     const mergedTrees = useMemo(() => {
@@ -29,11 +29,11 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
         tree.forEach(treeInst => {
             const allMeshes: Mesh[] = [];
             treeInst.forEach(treeMesh => {
+                treeMesh.mesh.position = new Vector3(0, 0, 0)
                 allMeshes.push(treeMesh.mesh)
             })
 
             const outMesh = Mesh.MergeMeshes(allMeshes, undefined, undefined, undefined, undefined, true) as Mesh;
-            // outMesh.addLODLevel(500, null);
 
             outMeshes.push(outMesh);
         })
@@ -41,7 +41,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     }, [scene, tree])
 
     useEffect(() => {
-        if (!scene || !ground || !mergedTrees) return
+        if (!scene || !terrainData.heightMap || !mergedTrees) return
         mergedTrees.forEach(mergedTree => {
             mergedTree.scaling = new Vector3(3, 3, 3)
             mergedTree.isVisible = false;
@@ -52,7 +52,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
                 material.useAlphaFromDiffuseTexture = true;
                 material.specularColor = new Color3(0, 0, 0);
             })
-            snapToTerrain(ground, mergedTree);
+            snapToHeightmap(terrainData, mergedTree);
         })
 
         for (let i = 0; i < treeResolution; i++) {
@@ -65,7 +65,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
 
                 const treeIndex = getRandomInt(0, mergedTrees.length - 1)
                 const treeVec = new Vector3(x, 0, z)
-                snapVecToTerrain(ground, treeVec, -0.1)
+                snapVecToHeightmap(terrainData, treeVec, -0.5)
 
                 if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345) continue;
 
@@ -73,7 +73,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
 
                 const newTree = treeMesh.createInstance("tree" + i)
                 newTree.position = treeVec
-                newTree.scaling.scaleInPlace(Scalar.RandomRange(0.8, 1.2))
+                newTree.scaling.scaleInPlace(Scalar.RandomRange(1.0, 1.5))
                 newTree.rotate(Vector3.Up(), Scalar.RandomRange(0, Math.PI * 2))
                 newTree.freezeWorldMatrix();
             }
@@ -85,6 +85,6 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
             mergedTrees.forEach(tree => tree.dispose());
         }
 
-    }, [mapSize, scene, ground, tree, heightScale, mergedTrees])
+    }, [mapSize, scene, tree, heightScale, mergedTrees, terrainData])
     return null
 }

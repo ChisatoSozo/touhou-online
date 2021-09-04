@@ -2,11 +2,10 @@ import { Mesh, PhysicsImpostor, Quaternion, Scene, TransformNode, Vector3 } from
 import React, { MutableRefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { OctreeContext } from '../containers/OctreeContext';
-import { TerrainContext } from '../containers/TerrainContext';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
-import { TerrainMesh } from '../terrain/TerrainMesh';
+import { ITerrainData, useTerrainData } from '../terrain/TerrainDataProvider';
 import { LOG_DEPTH } from '../utils/Switches';
-import { snapVecToTerrain } from '../utils/WorldUtils';
+import { snapVecToHeightmap } from '../utils/WorldUtils';
 import { MovementState } from './Player';
 import { doFalling } from './playerMovement/Falling';
 import { doFloating } from './playerMovement/Floating';
@@ -19,7 +18,7 @@ export const movementStateRef: MutableRefObject<MovementState> = {
     current: "walking"
 }
 
-export type MovementUpdateFunction = (deltaS: number, transform: Mesh, ground: TerrainMesh | undefined, head: TransformNode, scene: Scene, createPhysics: () => PhysicsImpostor | undefined) => void;
+export type MovementUpdateFunction = (deltaS: number, transform: Mesh, terrainData: ITerrainData, head: TransformNode, scene: Scene, createPhysics: () => PhysicsImpostor | undefined) => void;
 
 interface PlayerMovementProps {
     head: MutableRefObject<TransformNode | undefined>
@@ -28,6 +27,7 @@ interface PlayerMovementProps {
 export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }) => {
     const [sphere, setSphere] = useState<Mesh>()
     const { octree } = useContext(OctreeContext)
+    const terrainData = useTerrainData()
     const scene = useScene()
     useEffect(() => {
         if (sphere && octree) {
@@ -40,8 +40,6 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
         }
     }, [sphere, octree])
 
-    const { ground } = useContext(TerrainContext);
-
     const onCollision = useCallback(() => {
         movementStateRef.current = "walking";
         if (!sphere?.physicsImpostor || !head.current) return;
@@ -51,7 +49,7 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
     }, [head, sphere])
 
     const createPhysics = useCallback(() => {
-        if (!sphere || !ground || !scene) return;
+        if (!sphere || !scene) return;
         const newPhysicsImpostor = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, {
             mass: 1,
             restitution: 0.9,
@@ -60,28 +58,28 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
         // newPhysicsImpostor.registerOnPhysicsCollide(ground.physicsImpostor as PhysicsImpostor, onCollision)
         newPhysicsImpostor.physicsBody.angularDamping = 1;
         return newPhysicsImpostor
-    }, [sphere, ground, scene])
+    }, [sphere, scene])
 
     useDeltaBeforeRender((scene, deltaS) => {
-        if (!sphere || !head.current || !ground) return
+        if (!sphere || !head.current) return
 
         const feetPos = sphere.position.subtract(new Vector3(0, 0.5, 0));
         const terrainPos = feetPos.clone()
-        snapVecToTerrain(ground, terrainPos)
+        snapVecToHeightmap(terrainData, terrainPos)
         if (feetPos.y < terrainPos.y && movementStateRef.current !== "walking") onCollision();
 
         switch (movementStateRef.current) {
             case "walking":
-                doWalking(deltaS, sphere, ground, head.current, scene, createPhysics)
+                doWalking(deltaS, sphere, terrainData, head.current, scene, createPhysics)
                 break;
             case "falling":
-                doFalling(deltaS, sphere, ground, head.current, scene, createPhysics)
+                doFalling(deltaS, sphere, terrainData, head.current, scene, createPhysics)
                 break;
             case "floating":
-                doFloating(deltaS, sphere, ground, head.current, scene, createPhysics)
+                doFloating(deltaS, sphere, terrainData, head.current, scene, createPhysics)
                 break;
             case "flying":
-                doFlying(deltaS, sphere, ground, head.current, scene, createPhysics)
+                doFlying(deltaS, sphere, terrainData, head.current, scene, createPhysics)
                 break;
             default:
                 throw new Error("movement state not implemented: " + movementStateRef.current)

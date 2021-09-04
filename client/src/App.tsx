@@ -10,6 +10,7 @@ import { CannonJSPlugin } from './forks/CannonJSPlugin';
 import Engine from './forks/Engine';
 import { useWindowSize } from './hooks/useWindowSize';
 import { BindControls } from './player/BindControls';
+import { SkyBox } from './terrain/SkyBox';
 import { Terrain } from './terrain/Terrain';
 import { World } from './World';
 const gravityVector = new Vector3(0, -9.81, 0);
@@ -30,6 +31,7 @@ function App() {
                         <GameContainer xrEnabled={true}>
                             <BindControls />
                             <World />
+                            <SkyBox />
                             <Terrain />
                         </GameContainer>
                     </shadowGenerator>

@@ -6,8 +6,8 @@ import { movementStateRef, MovementUpdateFunction } from "../PlayerMovement";
 let lastDown = new Date()
 let lastForwards = new Date()
 
-export const doFloating: MovementUpdateFunction = (deltaS, mesh, ground, head, scene, createPhysicsImpostor) => {
-    if (!ground) return;
+export const doFloating: MovementUpdateFunction = (deltaS, mesh, terrainData, head, scene, createPhysicsImpostor) => {
+    if (!terrainData.getHeightAtCoordinates) return;
 
     const FORWARD = keyObject.metaDownKeys['FORWARD'];
     const BACK = keyObject.metaDownKeys['BACK'];
@@ -35,7 +35,7 @@ export const doFloating: MovementUpdateFunction = (deltaS, mesh, ground, head, s
     mesh.position = newVec;
 
     //STATE TRANSITIONS
-    const y = ground.getHeightAtCoordinates(newVec.x, newVec.z)
+    const y = terrainData.getHeightAtCoordinates(newVec.x, newVec.z)
     if (newVec.y < y) {
         movementStateRef.current = "walking";
     }

@@ -1,10 +1,9 @@
 import { Color3, Scene } from "@babylonjs/core";
-import { Engine } from "@babylonjs/core/Engines/engine";
-import { RawTexture } from "@babylonjs/core/Materials/Textures/rawTexture";
+import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { CustomMaterial } from "../forks/CustomMaterial";
-import { HEIGHTMAP_MAX_HEIGHT } from "../utils/Constants";
 import { glsl } from "../utils/MaterialUtils";
 import { LOG_DEPTH, SMOOTH_TERRAIN } from "../utils/Switches";
+import { COMMON_SHADER_FUNC, makeTerrainHeight, makeTerrainNormal, makeTerrainVaryings } from "./CommonShader";
 
 // const vertexShader = `
 // #include<__decl__defaultVertex>
@@ -656,34 +655,21 @@ import { LOG_DEPTH, SMOOTH_TERRAIN } from "../utils/Switches";
 // }
 // `
 
-export const createTerrainMaterial = async (heightmapEndpoint: string, size: number, height: number, lods: number[], scene: Scene) => {
+export const createTerrainMaterial = (heightMapTexture: Texture, terrainResolution: number, terrainSize: number, height: number, lods: number[], scene: Scene) => {
 	if (!scene.activeCamera) throw new Error("Attempt to construct material with no active camera")
 	const material = new CustomMaterial("myMaterial", scene) as CustomMaterial;
-	const data: { data: number[] } = await fetch(heightmapEndpoint, { mode: 'cors' }).then(response => response.json());
-	const heightData = new Float32Array(data.data.length * 4)
-	data.data.forEach((datum, i) => {
-		heightData[i * 4] = datum / HEIGHTMAP_MAX_HEIGHT;
-		heightData[i * 4 + 1] = datum / HEIGHTMAP_MAX_HEIGHT;
-		heightData[i * 4 + 2] = datum / HEIGHTMAP_MAX_HEIGHT;
-		heightData[i * 4 + 3] = datum / HEIGHTMAP_MAX_HEIGHT;
-	})
-	const resolution = Math.sqrt(data.data.length)
 
-	const logRes = Math.log2(resolution - 1)
-	if (logRes !== Math.floor(logRes)) {
-		throw new Error("heightmap must be one more than a power of two, is: " + resolution)
-	}
-
-	const heightTexture = RawTexture.CreateRGBATexture(heightData, resolution, resolution, scene, false, false, undefined, Engine.TEXTURETYPE_FLOAT);
-	material.AddUniform("heightmap", "sampler2D", heightTexture);
-	material.AddUniform("size", "float", size);
-	material.AddUniform("resolution", "float", resolution);
-	material.AddUniform("heightScale", "float", height);
+	material.AddUniform("heightMapTexture", "sampler2D", heightMapTexture);
+	material.AddUniform("terrainSize", "float", terrainSize);
+	material.AddUniform("terrainResolution", "float", terrainResolution);
+	material.AddUniform("terrainHeightScale", "float", height);
 	material.AddUniform("cameraPosition", "vec3", scene.activeCamera.globalPosition);
 	material.AddUniform("maxPolyWidth", "float", Math.pow(2, lods.length))
 
 	material.Vertex_Definitions(glsl`
-		varying vec3 vPositionHMap;
+		${makeTerrainVaryings}
+
+		${COMMON_SHADER_FUNC}
 	`)
 
 	material.Vertex_Before_PositionUpdated(glsl`
@@ -691,105 +677,63 @@ export const createTerrainMaterial = async (heightmapEndpoint: string, size: num
 		float oneSquare = squareSize * maxPolyWidth;
 
 		vec3 updatedCamera = (cameraPosition)
-			/ vec3(size, size, size)
-			* vec3(resolution, resolution, resolution);
+			/ vec3(terrainSize, terrainSize, terrainSize)
+			* vec3(terrainResolution, terrainResolution, terrainResolution);
 
 		positionUpdated.x += round(updatedCamera.x / oneSquare) * oneSquare;
 		positionUpdated.z += round(updatedCamera.z / oneSquare) * oneSquare;
 
 		vec2 terrainCoord = vec2(positionUpdated.z + 0.5, positionUpdated.x + 0.5);
-		vec2 uv = terrainCoord/vec2(resolution, resolution);
-		float height = texture(heightmap, uv).x;
-		vPositionHMap = positionUpdated.xyz + vec3(0., height * heightScale, 0.);
-		positionUpdated.y += height * heightScale;
+		
+		vec2 terrainUV = terrainCoord/vec2(terrainResolution, terrainResolution);
+
+		${makeTerrainHeight}
+		vPositionHMap = positionUpdated.xyz + vec3(0., terrainHeight, 0.);
+		positionUpdated.y += terrainHeight;
 	`)
 
 
 	if (SMOOTH_TERRAIN) material.Vertex_Before_NormalUpdated(glsl`
-		float pixelSize = 1./resolution;
-		float cellSize = 0.5*size*pixelSize;
-
-		float l = texture(heightmap, vec2(uv.x - pixelSize, uv.y)).x * heightScale;
-		float u = texture(heightmap, vec2(uv.x, uv.y + pixelSize)).x * heightScale;
-		float r = texture(heightmap, vec2(uv.x + pixelSize, uv.y)).x * heightScale;
-		float d = texture(heightmap, vec2(uv.x, uv.y - pixelSize)).x * heightScale;
-
-		vec3 vu = vec3(0, u, cellSize);
-		vec3 vd = vec3(0, d, -cellSize);
-		vec3 vr = vec3(cellSize, r, 0);
-		vec3 vl = vec3(-cellSize, l, 0);
-
-		normalUpdated = normalize(cross((vu - vd), (vr - vl)));
+		${makeTerrainNormal()}
+		normalUpdated = terrainNormal;
 	`)
 
 
 	material.Fragment_Definitions(glsl`
-		varying vec3 vPositionHMap;
+		${makeTerrainVaryings}
 
-		float invLerp(float x, float y, float a){
-			return clamp((a - x) / (y - x), 0., 1.);
-		}
-
-		vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
-
-		float snoise(vec2 v){
-			const vec4 C = vec4(0.211324865405187, 0.366025403784439,
-					-0.577350269189626, 0.024390243902439);
-			vec2 i  = floor(v + dot(v, C.yy) );
-			vec2 x0 = v -   i + dot(i, C.xx);
-			vec2 i1;
-			i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-			vec4 x12 = x0.xyxy + C.xxzz;
-			x12.xy -= i1;
-			i = mod(i, 289.0);
-			vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-			+ i.x + vec3(0.0, i1.x, 1.0 ));
-			vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
-				dot(x12.zw,x12.zw)), 0.0);
-			m = m*m ;
-			m = m*m ;
-			vec3 x = 2.0 * fract(p * C.www) - 1.0;
-			vec3 h = abs(x) - 0.5;
-			vec3 ox = floor(x + 0.5);
-			vec3 a0 = x - ox;
-			m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-			vec3 g;
-			g.x  = a0.x  * x0.x  + h.x  * x0.y;
-			g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-			return 130.0 * dot(m, g);
-		}
+		${COMMON_SHADER_FUNC}
 	`)
 
 	material.Fragment_Custom_Diffuse(glsl`
-		float normHeight = vPositionHMap.y/heightScale;
+		float normHeight = vPositionHMap.y/terrainHeightScale;
 
 		vec3 grass = mix(vec3(0., .6, .2), vec3(.05, .65, .25), snoise(vPositionHMap.xz/100.));
 		vec3 sand = mix(vec3(.76, .70, .50), vec3(.8, .75, .55), snoise(vPositionHMap.xz/100.));
 		vec3 rock = mix(vec3(.35, .3, .25), vec3(.3, .3, .2), snoise(vPositionHMap.xz/100.));;
 		vec3 snow = vec3(1.0, 1.0, 1.0);
-
+	
 		//grass
 		vec3 ground = grass;
-
+	
 		//becomeRock?
 		float isRock = invLerp(0.75, 0.70, vNormalW.y);
 		ground = mix(ground, rock, isRock);
-
+	
 		//becomeSand?
 		float isSand = invLerp(0.345, 0.335, normHeight);
 		ground = mix(ground, sand, isSand);
-
+	
 		//becomeSnow?
 		float isSnow = invLerp(0.57, 0.63, normHeight);
 		ground = mix(ground, snow, isSnow);
-
+	
 		result = ground;
 	`)
 
 
 
 	material.useLogarithmicDepth = LOG_DEPTH;
-	material.specularColor = new Color3(0, 0, 0)
-
-	return { resolution, material, heightMap: data.data, heightTexture }
+	material.specularColor = new Color3(0, 0, 0);
+	return material;
 }

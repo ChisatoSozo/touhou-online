@@ -4,8 +4,7 @@ import { movementStateRef, MovementUpdateFunction } from "../PlayerMovement";
 
 let lastSpace = new Date()
 
-export const doFalling: MovementUpdateFunction = (deltaS, mesh, ground) => {
-    if (!ground) return;
+export const doFalling: MovementUpdateFunction = (deltaS, mesh) => {
 
     const UP = keyObject.keyDeltas['JUMP'];
     if (UP > 0) {

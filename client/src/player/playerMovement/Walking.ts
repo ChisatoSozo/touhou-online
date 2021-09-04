@@ -1,11 +1,16 @@
 import { Vector2, Vector3 } from "@babylonjs/core";
 import { keyObject } from "../../containers/ControlsContext";
+import { ITerrainData } from "../../terrain/TerrainDataProvider";
 import { LATERAL_SPEED, WALK_MAX_SLOPE } from "../../utils/Constants";
-import { snapVecToTerrain } from "../../utils/WorldUtils";
+import { snapVecToHeightmap } from "../../utils/WorldUtils";
 import { movementStateRef, MovementUpdateFunction } from "../PlayerMovement";
 
-export const doWalking: MovementUpdateFunction = (deltaS, mesh, ground, head, scene, createPhysicsImpostor) => {
-    if (!ground) return;
+const isUnderground = (vec: Vector3, terrainData: ITerrainData) => {
+    if (!terrainData.getHeightAtCoordinates) return false;
+    return vec.y < terrainData.getHeightAtCoordinates(vec.x, vec.z);
+}
+
+export const doWalking: MovementUpdateFunction = (deltaS, mesh, terrainData, head, scene, createPhysicsImpostor) => {
 
     const FORWARD = keyObject.metaDownKeys['FORWARD'];
     const BACK = keyObject.metaDownKeys['BACK'];
@@ -25,11 +30,11 @@ export const doWalking: MovementUpdateFunction = (deltaS, mesh, ground, head, sc
     if (RIGHT) displacementVec.addInPlace(rightVec.scale(deltaS * LATERAL_SPEED * +RIGHT));
 
     const newVec = mesh.position.add(displacementVec)
-    snapVecToTerrain(ground, newVec, 0.5)
+    snapVecToHeightmap(terrainData, newVec, 0.5)
 
 
     const delta = newVec.subtract(mesh.position)
-    if (!delta.equals(Vector3.Zero()) && !ground.isUnderground(mesh.position)) {
+    if (!delta.equals(Vector3.Zero()) && !isUnderground(mesh.position, terrainData)) {
         if (delta.y / new Vector2(delta.x, delta.z).length() > WALK_MAX_SLOPE) return;
     }
 
