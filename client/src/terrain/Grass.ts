@@ -1,4 +1,4 @@
-import { Color3, Quaternion, Texture, Vector3 } from "@babylonjs/core";
+import { Color3, Quaternion, Vector3 } from "@babylonjs/core";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
 import { Assets } from "../containers/AssetContext";
@@ -7,14 +7,15 @@ import { getModel } from "../hooks/useModel";
 import { glsl } from "../utils/MaterialUtils";
 import { makeInstances } from "../utils/MeshUtils";
 import { LOG_DEPTH } from "../utils/Switches";
-import { COMMON_SHADER_FUNC, makeTerrainHeight, makeTerrainNormal, makeTerrainUV, makeTerrainVaryings } from "./CommonShader";
+import { COMMON_SHADER_FUNC, makeTerrainHeight, makeTerrainUV, makeTerrainVaryings } from "./CommonShader";
+import { ITerrainData } from "./TerrainDataProvider";
 
 export class Grass {
 
     public grassBase: Mesh;
     public uniformVector: Vector3;
 
-    constructor(assets: Assets, scene: Scene, heightMapTexture: Texture, terrainSize: number, terrainResolution: number, terrainHeightScale: number, grassStart: number, grassDistance: number, grassPerMeter: number, stretching = 1) {
+    constructor(assets: Assets, scene: Scene, terrainData: ITerrainData, grassStart: number, grassDistance: number, grassPerMeter: number, stretching = 1) {
         if (!scene.activeCamera) throw new Error("Scene has no active camera");
 
         const grass = getModel(assets, "grass", true);
@@ -39,10 +40,11 @@ export class Grass {
         material.AddUniform("grassDistance", "float", grassDistance);
         material.AddUniform("stretching", "float", stretching);
         material.AddUniform("cameraPosition", "vec3", scene.activeCamera.globalPosition);
-        material.AddUniform("heightMapTexture", "sampler2D", heightMapTexture);
-        material.AddUniform("terrainSize", "float", terrainSize);
-        material.AddUniform("terrainResolution", "float", terrainResolution)
-        material.AddUniform("terrainHeightScale", "float", terrainHeightScale);
+        material.AddUniform("heightMapTexture", "sampler2D", terrainData.heightMapTexture);
+        material.AddUniform("heightMapNormalTexture", "sampler2D", terrainData.heightMapNormalTexture);
+        material.AddUniform("terrainSize", "float", terrainData.terrainSize);
+        material.AddUniform("terrainResolution", "float", terrainData.terrainResolution)
+        material.AddUniform("terrainHeightScale", "float", terrainData.terrainHeightScale);
         material.AddUniform("uniformVector", "vec3", this.uniformVector);
 
         material.Vertex_Definitions(glsl`
@@ -113,13 +115,13 @@ export class Grass {
             positionNew += rand(positionNew.xy)*(grassInterval*2.);
             
             ${makeTerrainUV("positionNew")}
-            ${makeTerrainNormal(0.1)}
+            vec3 terrainNormal = texture(heightMapNormalTexture, terrainUV).xyz;
             ${makeTerrainHeight}
 
             vPositionHMap = vec3(positionNew.x, 0., positionNew.y) + vec3(0., terrainHeight, 0.);
 
             //becomeRock?
-            float isRock = invLerp(0.70, 0.65, terrainNormal.y);
+            float isRock = invLerp(0.752, 0.751, terrainNormal.y);
 
             //becomeSand?
             float isSand = invLerp(0.345, 0.335, normTerrainHeight);

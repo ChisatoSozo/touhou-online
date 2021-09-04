@@ -1,5 +1,4 @@
 import { BoundingInfo, Mesh, Nullable, Vector3, VertexData } from "@babylonjs/core";
-import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Observer } from "@babylonjs/core/Misc/observable";
 import { Scene } from "@babylonjs/core/scene";
 import { useContext, useEffect } from "react";
@@ -10,7 +9,7 @@ import { TerrainContext } from "../containers/TerrainContext";
 import { useAssets } from "../hooks/useAssets";
 import { MAX_MESHES_IN_SCENE } from "../utils/Constants";
 import { SMOOTH_TERRAIN } from "../utils/Switches";
-import { useTerrainData } from "./TerrainDataProvider";
+import { ITerrainData, useTerrainData } from "./TerrainDataProvider";
 import { createTerrainMaterial } from "./TerrainMaterial";
 
 type SquareType = "bottomLeftCorner" |
@@ -162,11 +161,11 @@ export const TerrainMeshComponent = () => {
     const assets = useAssets()
     const { setGround } = useContext(TerrainContext)
     const { octree } = useContext(OctreeContext)
-    const { terrainSize, terrainHeightScale, heightMapTexture, terrainResolution, heightMap } = useTerrainData()
+    const terrainData = useTerrainData()
 
     useEffect(() => {
-        if (!terrainSize || !terrainHeightScale || !scene || !octree || !heightMapTexture || !terrainResolution || !heightMap) return;
-        const terrain = new TerrainMesh("terrain", heightMapTexture, heightMap, terrainResolution, [0.1, 0.2, 0.3, 0.4], terrainSize, terrainHeightScale, newTerrain => {
+        if (!terrainData.terrainSize || !terrainData.terrainHeightScale || !scene || !octree || !terrainData.heightMapTexture || !terrainData.terrainResolution || !terrainData.heightMap) return;
+        const terrain = new TerrainMesh("terrain", terrainData, [0.1, 0.2, 0.3, 0.4], newTerrain => {
             //TODO: TerrainPhysics
             // newTerrain.physicsImpostor = new PhysicsImpostor(newTerrain, PhysicsImpostor.HeightmapImpostor, { mass: 0, friction: 1 });
             // newTerrain.physicsImpostor.forceUpdate()
@@ -178,7 +177,7 @@ export const TerrainMeshComponent = () => {
         return () => {
             terrain.dispose();
         }
-    }, [assets, heightMap, heightMapTexture, octree, scene, setGround, terrainHeightScale, terrainResolution, terrainSize])
+    }, [assets, octree, scene, setGround, terrainData])
     return null;
 }
 
@@ -187,24 +186,20 @@ export const TerrainMeshComponent = () => {
  */
 export class TerrainMesh extends Mesh {
 
-    public resolution = 0;
-    public size: number;
-    public height: number;
-    public heightMap: number[][] | undefined;
+    public terrainData: ITerrainData;
     public assets: Assets;
     public observer: Nullable<Observer<Scene>> = null;
 
-    constructor(name: string, heightMapTexture: Texture, heightMap: number[][], terrainResolution: number, lods: number[], size: number, height: number, onFinish: (ref: TerrainMesh) => void, assets: Assets, scene: Scene) {
+    constructor(name: string, terrainData: ITerrainData, lods: number[], onFinish: (ref: TerrainMesh) => void, assets: Assets, scene: Scene) {
         super(name, scene);
-        this.size = size;
-        this.height = height;
         this.assets = assets;
-        this.heightMap = heightMap;
-        this.init(heightMapTexture, terrainResolution, lods, scene).then(() => onFinish(this))
+        this.terrainData = terrainData
+        this.init(terrainData, lods, scene).then(() => onFinish(this))
     }
 
-    private init = async (heightMapTexture: Texture, terrainResolution: number, lods: number[], scene: Scene) => {
-        const material = createTerrainMaterial(heightMapTexture, terrainResolution, this.size, this.height, lods, scene);
+    private init = async (terrainData: ITerrainData, lods: number[], scene: Scene) => {
+        if (!this.terrainData.terrainResolution || !this.terrainData.terrainSize) throw new Error("terrain not ready")
+        const material = createTerrainMaterial(terrainData, lods, scene);
 
         const positions: number[] = [];
         const normals: number[] = [];
@@ -216,8 +211,8 @@ export class TerrainMesh extends Mesh {
 
         let lastLod = 0;
         let ring = 0;
-        while (ring < (terrainResolution - 1) / 2) {
-            const ringPerc = ring / (terrainResolution / 2)
+        while (ring < (this.terrainData.terrainResolution - 1) / 2) {
+            const ringPerc = ring / (this.terrainData.terrainResolution / 2)
             let curLod = 0;
             lods.forEach((lod, i) => {
                 if (ringPerc >= lod) {
@@ -236,6 +231,7 @@ export class TerrainMesh extends Mesh {
                 const [x, y] = square.bottomLeft;
                 const squareCoords = curLod === lastLod ? tesselations.none : tesselations[square.squareType];
                 squareCoords.forEach(coord => {
+                    if (!this.terrainData.terrainResolution) throw new Error("terrainData not set");
                     const i = coord[0] * ringSize + x;
                     const j = coord[1] * ringSize + y;
                     const positionLookup = `${i},${j}`
@@ -246,7 +242,7 @@ export class TerrainMesh extends Mesh {
                     else {
                         positionsMap[positionLookup] = curIndex;
                         indicies.push(curIndex);
-                        positions.push(i + ((terrainResolution - 1) / 2), 0, j + ((terrainResolution - 1) / 2))
+                        positions.push(i + ((this.terrainData.terrainResolution - 1) / 2), 0, j + ((this.terrainData.terrainResolution - 1) / 2))
                         normals.push(0, 1, 0);
                         curIndex++;
                     }
@@ -270,8 +266,8 @@ export class TerrainMesh extends Mesh {
         this.alwaysSelectAsActiveMesh = true;
         //@ts-ignore
         this.material = material;
-        this.scaling = new Vector3(this.size / terrainResolution, 1, this.size / terrainResolution);
-        this.position = new Vector3(-this.size / 2, 0, -this.size / 2);
+        this.scaling = new Vector3(this.terrainData.terrainSize / this.terrainData.terrainResolution, 1, this.terrainData.terrainSize / this.terrainData.terrainResolution);
+        this.position = new Vector3(-this.terrainData.terrainSize / 2, 0, -this.terrainData.terrainSize / 2);
 
         return;
     }
@@ -285,6 +281,7 @@ export class TerrainMesh extends Mesh {
     }
 
     public getBoundingInfo = () => {
-        return new BoundingInfo(new Vector3(-this.size / 2, this.position.y, -this.size / 2), new Vector3(this.size / 2, this.position.y + this.height, this.size / 2))
+        if (!this.terrainData.terrainSize) throw new Error("terrainData not set")
+        return new BoundingInfo(new Vector3(-this.terrainData.terrainSize / 2, this.position.y, -this.terrainData.terrainSize / 2), new Vector3(this.terrainData.terrainSize / 2, this.position.y + this.terrainData.terrainSize, this.terrainData.terrainSize / 2))
     }
 }

@@ -413,12 +413,14 @@ export class CannonJSPlugin implements IPhysicsEnginePlugin {
     }
 
     private _createHeightmap(object: IPhysicsEnabledObject) {
+
         const terrain = object as TerrainMesh;
+        if (!terrain.terrainData.terrainSize || !terrain.terrainData.terrainResolution) throw new Error("terrainData not set")
         let boundingInfo = object.getBoundingInfo();
         var minY = boundingInfo.boundingBox.extendSizeWorld.z;
 
-        var shape = new this.BJSCANNON.Heightfield(terrain.heightMap, {
-            elementSize: terrain.size / (terrain.resolution - 1),
+        var shape = new this.BJSCANNON.Heightfield(terrain.terrainData.heightMap, {
+            elementSize: terrain.terrainData.terrainSize / (terrain.terrainData.terrainResolution - 1),
         });
 
         //For future reference, needed for body transformation
