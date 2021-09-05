@@ -24,6 +24,7 @@ export const getModel: getModelType = (assets, modelName, extractChild = false) 
         if (!container) return;
         const newInstance = container.instantiateModelsToScene();
         const mesh = (extractChild ? newInstance.rootNodes[0].getChildren()[0] : newInstance.rootNodes[0]) as Mesh;
+
         mesh.parent = null;
         const animationGroups = newInstance.animationGroups;
         const animationSkeleton = newInstance.skeletons.length ? newInstance.skeletons[0] : undefined;
@@ -44,6 +45,7 @@ export const useModel: useModelType = (modelName, extractChild = false) => {
             if (!container) return;
             const newInstance = container.instantiateModelsToScene();
             const mesh = (extractChild ? newInstance.rootNodes[0].getChildren()[0] : newInstance.rootNodes[0]) as Mesh;
+
             const animationGroups = newInstance.animationGroups;
             const animationSkeleton = newInstance.skeletons.length ? newInstance.skeletons[0] : undefined;
 
@@ -87,6 +89,7 @@ export const getModels: getModelsType = (assets, modelName, childPaths, extractC
         const newInstance = container.instantiateModelsToScene();
 
         const mesh = (extractChild ? newInstance.rootNodes[0].getChildren()[0] : newInstance.rootNodes[0]) as Mesh;
+
         const models = procGetChildren(childPaths, mesh);
 
         return models
@@ -102,6 +105,7 @@ export const useModels: useModelsType = (modelName, childPaths, extractChild = f
             const newInstance = container.instantiateModelsToScene();
 
             const mesh = (extractChild ? newInstance.rootNodes[0].getChildren()[0] : newInstance.rootNodes[0]) as Mesh;
+
             const models = procGetChildren(childPaths, mesh);
 
             return models

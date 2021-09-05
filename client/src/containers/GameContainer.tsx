@@ -15,7 +15,9 @@ const assetPaths = [
     "/assets/trees/Tree_1.glb",
     "/assets/trees/Tree_2.glb",
     "/assets/trees/Tree_3.glb",
-    "/assets/foliage/grass.glb"
+    "/assets/foliage/grass.glb",
+
+    "/assets/avatars/Reimu.glb"
 ]
 
 export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnabled }) => {
@@ -31,7 +33,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnable
                 <TerrainContext.Provider value={terrain}>
                     <OctreeContext.Provider value={octree}>
                         <AssetContext.Provider value={assets}>
-                            <TerrainDataProvider heightmapEndpoint={`http://${window.location.hostname}:5000/terrain`} size={5000} height={400}>
+                            <TerrainDataProvider heightmapEndpoint={`http://${window.location.hostname}:5000/terrain`} size={10000} height={800}>
                                 {children}
                             </TerrainDataProvider>
                         </AssetContext.Provider>

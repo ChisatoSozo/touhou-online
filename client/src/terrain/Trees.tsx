@@ -69,8 +69,6 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
 
                 const normal = terrainData.getNormalAtCoordinates(x, z);
 
-                console.log(normal)
-
                 if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345 || normal.y < 0.8) continue;
 
                 const treeMesh = mergedTrees[treeIndex];

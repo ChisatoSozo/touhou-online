@@ -1,10 +1,10 @@
 import { Scene } from "@babylonjs/core/scene";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useScene } from "react-babylonjs";
 import { Assets } from "../containers/AssetContext";
-import { OctreeContext } from "../containers/OctreeContext";
 import { useAssets } from "../hooks/useAssets";
 import { useDeltaBeforeRender } from "../hooks/useDeltaBeforeRender";
+import { useOctree } from "../hooks/useOctree";
 import { Grass } from "./Grass";
 import { ITerrainData, useTerrainData } from "./TerrainDataProvider";
 
@@ -14,7 +14,7 @@ export const TerrainGrassComponent = () => {
     const terrainData = useTerrainData();
     const assets = useAssets()
     const scene = useScene()
-    const { octree } = useContext(OctreeContext)
+    const octree = useOctree();
     const [grass, setGrass] = useState<LODGrass>()
 
     useEffect(() => {

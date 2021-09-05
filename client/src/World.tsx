@@ -3,6 +3,7 @@ import { useBeforeRender } from 'react-babylonjs';
 import { useOnline } from './hooks/useOnline';
 import { useRig } from './hooks/useRig';
 import { Player } from './player/Player';
+import { Terrain } from './terrain/Terrain';
 import { protoRig } from './utils/ProtoUtils';
 
 const username = [Math.random(), Math.random(), Math.random()].join(',');
@@ -28,6 +29,7 @@ export const World = () => {
     return (
         <>
             <Player />
+            <Terrain />
             {/* {worldState &&
                 worldState.playersList.map(
                     (player) =>

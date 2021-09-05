@@ -47,8 +47,8 @@ export const createTerrainMaterial = (terrainData: ITerrainData, lods: number[],
 	`)
 
 
-	if (SMOOTH_TERRAIN) material.Vertex_Before_NormalUpdated(glsl`
-		normalUpdated = terrainNormal;
+	if (SMOOTH_TERRAIN) material.Vertex_After_WorldPosComputed(glsl`
+		vNormalW = terrainNormal;
 	`)
 
 

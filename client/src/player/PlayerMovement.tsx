@@ -1,16 +1,18 @@
 import { Mesh, PhysicsImpostor, Quaternion, Scene, TransformNode, Vector3 } from '@babylonjs/core';
-import React, { MutableRefObject, useCallback, useContext, useEffect, useState } from 'react';
+import React, { MutableRefObject, useCallback, useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
-import { OctreeContext } from '../containers/OctreeContext';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
+import { useOctree } from '../hooks/useOctree';
 import { ITerrainData, useTerrainData } from '../terrain/TerrainDataProvider';
 import { LOG_DEPTH } from '../utils/Switches';
+import { username } from '../utils/TempConst';
 import { snapVecToHeightmap } from '../utils/WorldUtils';
 import { MovementState } from './Player';
 import { doFalling } from './playerMovement/Falling';
 import { doFloating } from './playerMovement/Floating';
 import { doFlying } from './playerMovement/Flying';
 import { doWalking } from './playerMovement/Walking';
+import { PLAYER_POSE_STORE } from './PlayerPoseStore';
 
 const playerPosition = new Vector3(0, 500, 0)
 
@@ -26,9 +28,23 @@ interface PlayerMovementProps {
 
 export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }) => {
     const [sphere, setSphere] = useState<Mesh>()
-    const { octree } = useContext(OctreeContext)
+    const octree = useOctree();
     const terrainData = useTerrainData()
     const scene = useScene()
+
+    useEffect(() => {
+        PLAYER_POSE_STORE[username] = {
+            head: {
+                position: new Vector3(),
+                rotation: new Quaternion()
+            },
+            root: {
+                position: new Vector3(),
+                rotation: new Quaternion()
+            },
+        }
+    }, [])
+
     useEffect(() => {
         if (sphere && octree) {
             octree.dynamicContent.push(sphere);
@@ -89,6 +105,8 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
             sphere.rotationQuaternion = new Quaternion()
         }
 
+        PLAYER_POSE_STORE[username].head.position.copyFrom(feetPos.add(new Vector3(0, 1.88, 0)))
+        PLAYER_POSE_STORE[username].root.position.copyFrom(feetPos)
     });
 
     return <sphere isVisible={false} name="cameraPosition" diameter={0.5} segments={4} ref={(sphere: Mesh) => setSphere(sphere)} position={playerPosition}>

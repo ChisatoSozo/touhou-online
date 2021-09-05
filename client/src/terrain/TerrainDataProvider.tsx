@@ -111,6 +111,7 @@ export const TerrainDataProvider: React.FC<TerrainDataProviderProps> = ({ height
                 inPos.addInPlace(new Vector2(size / 2, size / 2))
                     .divideInPlace(new Vector2(size, size))
                     .scaleInPlace(resolution - 1)
+                    .addInPlace(new Vector2(0.5, 0.5));
 
                 if (inPos.x < 0 || inPos.x > (resolution - 1)) return 0;
                 if (inPos.y < 0 || inPos.y > (resolution - 1)) return 0;

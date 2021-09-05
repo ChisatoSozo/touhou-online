@@ -4,9 +4,9 @@ import { Scene } from "@babylonjs/core/scene";
 import { useContext, useEffect } from "react";
 import { useScene } from "react-babylonjs";
 import { Assets } from "../containers/AssetContext";
-import { OctreeContext } from "../containers/OctreeContext";
 import { TerrainContext } from "../containers/TerrainContext";
 import { useAssets } from "../hooks/useAssets";
+import { useOctree } from "../hooks/useOctree";
 import { MAX_MESHES_IN_SCENE } from "../utils/Constants";
 import { SMOOTH_TERRAIN } from "../utils/Switches";
 import { ITerrainData, useTerrainData } from "./TerrainDataProvider";
@@ -160,7 +160,7 @@ export const TerrainMeshComponent = () => {
     const scene = useScene();
     const assets = useAssets()
     const { setGround } = useContext(TerrainContext)
-    const { octree } = useContext(OctreeContext)
+    const octree = useOctree();
     const terrainData = useTerrainData()
 
     useEffect(() => {

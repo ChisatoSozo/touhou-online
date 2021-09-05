@@ -1,11 +1,13 @@
 import { Color3, Mesh, Texture } from '@babylonjs/core'
-import React, { useRef } from 'react'
+import React, { MutableRefObject } from 'react'
 import { useBeforeRender, useScene } from 'react-babylonjs'
 
+interface SkyBoxProps {
+    skyBoxRef: MutableRefObject<Mesh | undefined>
+}
 
-export const SkyBox = () => {
+export const SkyBox: React.FC<SkyBoxProps> = ({ skyBoxRef }) => {
 
-    const skyBoxRef = useRef<Mesh>()
     const scene = useScene()
 
     useBeforeRender(() => {
