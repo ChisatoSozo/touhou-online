@@ -194,6 +194,7 @@ export class TerrainMesh extends Mesh {
         super(name, scene);
         this.assets = assets;
         this.terrainData = terrainData
+        this.receiveShadows = true;
         this.init(terrainData, lods, scene).then(() => onFinish(this))
     }
 

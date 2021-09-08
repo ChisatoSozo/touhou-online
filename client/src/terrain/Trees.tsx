@@ -1,8 +1,9 @@
 import { Color3, MultiMaterial, Scalar, StandardMaterial, Vector3 } from '@babylonjs/core';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import React, { useEffect, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { useScene } from 'react-babylonjs';
 import { useMultiModels } from '../hooks/useModel';
+import { ShadowContext } from '../lights/Sun';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { getRandomInt } from '../utils/MathUtils';
 import { simplex } from '../utils/Noise';
@@ -17,11 +18,12 @@ interface TreesProps {
 
 const treeChildPaths = [[0], [0], [0]];
 const treeModels = ["Tree_1", "Tree_2", "Tree_3"];
-const treeResolution = 10;
+const treeResolution = 150;
 export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     const scene = useScene()
     const terrainData = useTerrainData()
     const tree = useMultiModels(treeModels, treeChildPaths)
+    const { addShadowCaster } = useContext(ShadowContext)
 
     const mergedTrees = useMemo(() => {
         if (!tree || !scene) return;
@@ -67,17 +69,16 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
                 const treeVec = new Vector3(x, 0, z)
                 snapVecToHeightmap(terrainData, treeVec, -0.5)
 
-                const normal = terrainData.getNormalAtCoordinates(x, z);
-
-                if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345 || normal.y < 0.8) continue;
+                if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345) continue;
 
                 const treeMesh = mergedTrees[treeIndex];
 
                 const newTree = treeMesh.createInstance("tree" + i)
                 newTree.position = treeVec
-                newTree.scaling.scaleInPlace(Scalar.RandomRange(1.0, 1.5))
+                newTree.scaling.scaleInPlace(Scalar.RandomRange(0.8, 1.5))
                 newTree.rotate(Vector3.Up(), Scalar.RandomRange(0, Math.PI * 2))
                 newTree.freezeWorldMatrix();
+                addShadowCaster(newTree)
             }
         }
 

@@ -30,6 +30,7 @@ export class Grass {
         this.uniformVector = new Vector3();
 
         this.grassBase.alwaysSelectAsActiveMesh = true;
+        this.grassBase.receiveShadows = true;
 
         const numGrass = Math.pow(grassPerMeter * grassDistance * 2, 2) - Math.pow(grassPerMeter * grassStart * 2, 2)
         makeInstances(this.grassBase, numGrass);

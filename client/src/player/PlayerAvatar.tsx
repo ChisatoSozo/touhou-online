@@ -1,8 +1,9 @@
 import { Mesh, Vector3 } from '@babylonjs/core';
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useScene } from 'react-babylonjs';
 import { useModel } from '../hooks/useModel';
 import { useOctree } from '../hooks/useOctree';
+import { ShadowContext } from '../lights/Sun';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { makeLogarithmic } from '../utils/MeshUtils';
 import { avatar } from '../utils/TempConst';
@@ -28,6 +29,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
     const scene = useScene()
     const avatarModel = useModel(avatar);
     const octree = useOctree()
+    const { addShadowCaster } = useContext(ShadowContext)
 
     useEffect(() => {
         if (!avatarModel?.mesh || !octree || !scene) return;
@@ -35,17 +37,20 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
         makeLogarithmic(avatarModel.mesh);
         avatarModel.mesh.scaling = new Vector3(0.3, 0.3, 0.3);
         avatarModel.mesh.alwaysSelectAsActiveMesh = true;
+        avatarModel.mesh.receiveShadows = true;
         avatarModel.mesh.getChildren(undefined, false).forEach(child => {
             if (child instanceof Mesh) {
                 octree.dynamicContent.push(child);
                 child.alwaysSelectAsActiveMesh = true
+                child.receiveShadows = true;
             }
         })
         octree.dynamicContent.push(avatarModel.mesh);
         scene.createOrUpdateSelectionOctree(MAX_MESHES_IN_SCENE)
         avatarModel.mesh.position = PLAYER_POSE_STORE[username].root.position
         avatarModel.mesh.rotationQuaternion = PLAYER_POSE_STORE[username].root.rotation
-    }, [octree, avatarModel, scene, username]);
+        addShadowCaster(avatarModel.mesh);
+    }, [octree, avatarModel, scene, username, addShadowCaster]);
 
 
 

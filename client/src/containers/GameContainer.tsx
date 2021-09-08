@@ -1,4 +1,5 @@
 import React from 'react';
+import { heightScale, mapSize } from '../terrain/Terrain';
 import { TerrainDataProvider } from '../terrain/TerrainDataProvider';
 import { AssetContext, useAssetContext } from './AssetContext';
 import { ControlsContext, useControlsContext } from './ControlsContext';
@@ -33,7 +34,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnable
                 <TerrainContext.Provider value={terrain}>
                     <OctreeContext.Provider value={octree}>
                         <AssetContext.Provider value={assets}>
-                            <TerrainDataProvider heightmapEndpoint={`http://${window.location.hostname}:5000/terrain`} size={10000} height={800}>
+                            <TerrainDataProvider heightmapEndpoint={`http://${window.location.hostname}:5000/terrain`} size={mapSize} height={heightScale}>
                                 {children}
                             </TerrainDataProvider>
                         </AssetContext.Provider>
