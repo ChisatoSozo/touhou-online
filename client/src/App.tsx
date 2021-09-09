@@ -25,15 +25,15 @@ function App() {
     return (
         <Engine width={windowSize.width} height={windowSize.height} antialias canvasId="babylonJS">
             <Scene fogMode={BJSScene.FOGMODE_EXP2} fogDensity={0.0005} fogColor={skyColor3} ambientColor={skyColor3} clearColor={skyColor} enablePhysics={[gravityVector, new CannonJSPlugin()]}>
-                <Sun>
-                    <shadowGenerator mapSize={1024} useBlurExponentialShadowMap blurKernel={32} shadowCastChildren>
-                        <GameContainer xrEnabled={true}>
-                            <BindControls />
-                            <World />
 
-                        </GameContainer>
-                    </shadowGenerator>
-                </Sun>
+                <GameContainer xrEnabled={true}>
+
+                    <BindControls />
+                    <Sun>
+                        <World />
+                    </Sun>
+                </GameContainer>
+
                 <hemisphericLight name="light1" intensity={0.1} direction={Vector3.Up()} />
 
             </Scene>

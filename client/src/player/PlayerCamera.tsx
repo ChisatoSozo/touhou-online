@@ -1,6 +1,6 @@
 import { Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
 import React, { MutableRefObject } from 'react';
-import { useBeforeRender } from 'react-babylonjs';
+import { useBeforeRender, useScene } from 'react-babylonjs';
 import { keyObject } from '../containers/ControlsContext';
 import { THIRD_PERSON } from '../utils/Switches';
 import { username } from '../utils/TempConst';
@@ -14,6 +14,8 @@ interface PlayerCameraProps {
 }
 
 export const PlayerCamera: React.FC<PlayerCameraProps> = ({ head }) => {
+
+    const scene = useScene()
 
     useBeforeRender(() => {
         if (!head.current) return;

@@ -18,7 +18,7 @@ interface TreesProps {
 
 const treeChildPaths = [[0], [0], [0]];
 const treeModels = ["Tree_1", "Tree_2", "Tree_3"];
-const treeResolution = 150;
+const treeResolution = 60;
 export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     const scene = useScene()
     const terrainData = useTerrainData()
@@ -45,7 +45,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     useEffect(() => {
         if (!scene || !terrainData.heightMap || !mergedTrees || !terrainData.getNormalAtCoordinates) return
         mergedTrees.forEach(mergedTree => {
-            mergedTree.scaling = new Vector3(3, 3, 3)
+            mergedTree.scaling = new Vector3(6, 6, 6)
             mergedTree.isVisible = false;
             (mergedTree.material as MultiMaterial).subMaterials.forEach(mat => {
                 if (!mat) return;
@@ -66,10 +66,11 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
                 if (treeValue > 0.3) continue;
 
                 const treeIndex = getRandomInt(0, mergedTrees.length - 1)
+                const treeNormal = terrainData.getNormalAtCoordinates(x, z);
                 const treeVec = new Vector3(x, 0, z)
                 snapVecToHeightmap(terrainData, treeVec, -0.5)
 
-                if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345) continue;
+                if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345 || treeNormal.y < 0.8) continue;
 
                 const treeMesh = mergedTrees[treeIndex];
 
@@ -88,6 +89,6 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
             mergedTrees.forEach(tree => tree.dispose());
         }
 
-    }, [mapSize, scene, tree, heightScale, mergedTrees, terrainData])
+    }, [mapSize, scene, tree, heightScale, mergedTrees, terrainData, addShadowCaster])
     return null
 }
