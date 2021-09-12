@@ -36,10 +36,9 @@ export const Sun: React.FC = ({ children }) => {
         shadowGenerator.numCascades = 4;
         shadowGenerator.autoCalcDepthBounds = true;
         shadowGenerator.depthClamp = true;
-        shadowGenerator.usePercentageCloserFiltering = true;
-        shadowGenerator.stabilizeCascades = true;
         shadowGenerator.bias = 0.001;
         shadowGenerator.shadowMaxZ = shadowLength;
+        shadowGenerator.filter = 6;
         shadowGenerator.splitFrustum()
 
         setShadowGenerator(shadowGenerator);

@@ -6,8 +6,8 @@ import { TerrainMeshComponent } from './TerrainMesh';
 import { Trees } from './Trees';
 import { Water } from './Water';
 
-export const mapSize = 1000
-export const heightScale = 80;
+export const mapSize = 8000
+export const heightScale = 640;
 
 
 

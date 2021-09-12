@@ -43,12 +43,14 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
                 octree.dynamicContent.push(child);
                 child.alwaysSelectAsActiveMesh = true
                 child.receiveShadows = true;
+                child.isVisible = false;
             }
         })
         octree.dynamicContent.push(avatarModel.mesh);
         scene.createOrUpdateSelectionOctree(MAX_MESHES_IN_SCENE)
         avatarModel.mesh.position = PLAYER_POSE_STORE[username].root.position
         avatarModel.mesh.rotationQuaternion = PLAYER_POSE_STORE[username].root.rotation
+        avatarModel.mesh.isVisible = false;
         addShadowCaster(avatarModel.mesh);
     }, [octree, avatarModel, scene, username, addShadowCaster]);
 

@@ -26,10 +26,10 @@ export const Water: React.FC<WaterProps> = ({ skyBoxRef, y }) => {
         bumpTexture.uScale = 50.;
         bumpTexture.vScale = 50.;
         water.bumpTexture = bumpTexture
-        water.windForce = -.05;
+        water.windForce = -.01;
         water.waveHeight = 0;
-        water.bumpHeight = 0.1;
-        water.waveLength = 0;
+        water.bumpHeight = 1;
+        water.waveLength = .3;
         water.colorBlendFactor = 0;
         water.useLogarithmicDepth = LOG_DEPTH
         water.disableClipPlane = false;

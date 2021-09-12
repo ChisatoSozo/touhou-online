@@ -4,7 +4,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Assets } from "../containers/AssetContext";
 import { CustomMaterial } from "../forks/CustomMaterial";
 import { getModel } from "../hooks/useModel";
-import { glsl } from "../utils/MaterialUtils";
+import { convertToCell, glsl } from "../utils/MaterialUtils";
 import { makeInstances } from "../utils/MeshUtils";
 import { LOG_DEPTH } from "../utils/Switches";
 import { COMMON_SHADER_FUNC, makeTerrainHeight, makeTerrainUV, makeTerrainVaryings } from "./CommonShader";
@@ -165,7 +165,7 @@ export class Grass {
         material.Fragment_Custom_Diffuse(glsl`
             float normHeight = vPositionHMap.y/terrainHeightScale;
 
-            vec3 grass = mix(vec3(0., .6, .2), vec3(.05, .65, .25), snoise(vPositionHMap.xz/100.));
+            vec3 grass = vec3(.025, .625, .225);
             vec3 grassClose = mix(vec3(0., .6, .2), vec3(.05, .65, .25), snoise(vPositionHMap.xz * 100.));
 
             vec3 sand = mix(vec3(.76, .70, .50), vec3(.8, .75, .55), snoise(vPositionHMap.xz/100.));
@@ -183,11 +183,11 @@ export class Grass {
             float isSnow = invLerp(0.57, 0.63, normHeight);
             ground = mix(ground, snow, isSnow);
         
-            result = ground;
+            vec4 cellFrag = vec4(ground, 1.);
         `)
         material.backFaceCulling = false;
         material.useLogarithmicDepth = LOG_DEPTH;
-        material.diffuseColor = new Color3(0, 1, 0);
+        convertToCell(material, scene, 0);
         this.grassBase.material = material;
 
 

@@ -1,6 +1,6 @@
 import { Color3, Scene } from "@babylonjs/core";
 import { CustomMaterial } from "../forks/CustomMaterial";
-import { glsl } from "../utils/MaterialUtils";
+import { convertToCell, glsl } from "../utils/MaterialUtils";
 import { LOG_DEPTH, SMOOTH_TERRAIN } from "../utils/Switches";
 import { COMMON_SHADER_FUNC, makeTerrainHeight, makeTerrainVaryings } from "./CommonShader";
 import { ITerrainData } from "./TerrainDataProvider";
@@ -174,7 +174,7 @@ export const createTerrainMaterial = (terrainData: ITerrainData, lods: number[],
 		
 		vec3 rock = col;
 
-		vec3 grass = mix(vec3(0., .6, .2), vec3(.05, .65, .25), snoise(vPositionHMap.xz/100.));
+		vec3 grass = vec3(.025, .625, .225);
 		vec3 sand = mix(vec3(.76, .70, .50), vec3(.8, .75, .55), snoise(vPositionHMap.xz/100.));
 		// vec3 rock = mix(vec3(.35, .3, .25), vec3(.3, .3, .2), snoise(vPositionHMap.xz/100.));;
 		vec3 snow = vec3(1.0, 1.0, 1.0);
@@ -194,12 +194,12 @@ export const createTerrainMaterial = (terrainData: ITerrainData, lods: number[],
 		float isSnow = invLerp(0.57, 0.63, normHeight);
 		ground = mix(ground, snow, isSnow);
 	
-		result = ground;
+		vec4 cellFrag = vec4(ground, 1.);
 	`)
 
 
 
 	material.useLogarithmicDepth = LOG_DEPTH;
 	material.specularColor = new Color3(0, 0, 0);
-	return material;
+	return convertToCell(material, scene, 0);
 }
