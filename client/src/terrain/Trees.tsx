@@ -75,14 +75,14 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
                 const z = Scalar.Lerp(-mapSize / 2, mapSize / 2, j / (treeResolution - 1)) + Scalar.RandomRange(-mapSize / (treeResolution * 2), mapSize / (treeResolution * 2));
 
                 const treeValue = simplex.noise2D(x / 800, z / 800);
-                if (treeValue > 0.1) continue;
+                if (treeValue > 0.3) continue;
 
                 const treeIndex = getRandomInt(0, mergedTrees.length - 1)
                 const treeNormal = terrainData.getNormalAtCoordinates(x, z);
                 const treeVec = new Vector3(x, 0, z)
                 snapVecToHeightmap(terrainData, treeVec, -0.5)
 
-                if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.345 || treeNormal.y < 0.8) continue;
+                if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.3410 || treeNormal.y < 0.8) continue;
 
                 const treeMesh = mergedTrees[treeIndex];
 

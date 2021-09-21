@@ -3,7 +3,7 @@ import React, { MutableRefObject } from 'react'
 import { useBeforeRender, useScene } from 'react-babylonjs'
 
 interface SkyBoxProps {
-    skyBoxRef: MutableRefObject<Mesh | undefined>
+    skyBoxRef?: MutableRefObject<Mesh | undefined>
 }
 
 export const SkyBox: React.FC<SkyBoxProps> = ({ skyBoxRef }) => {
@@ -11,7 +11,7 @@ export const SkyBox: React.FC<SkyBoxProps> = ({ skyBoxRef }) => {
     const scene = useScene()
 
     useBeforeRender(() => {
-        if (!skyBoxRef.current || !scene?.activeCamera) return;
+        if (!skyBoxRef?.current || !scene?.activeCamera) return;
         skyBoxRef.current.position.copyFrom(scene.activeCamera.globalPosition.scale(0.8))
     })
 

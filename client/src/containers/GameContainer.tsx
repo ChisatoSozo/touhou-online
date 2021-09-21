@@ -12,13 +12,22 @@ interface GameContainerProps {
     xrEnabled: boolean;
 }
 
-const assetPaths = [
-    "/assets/trees/Tree_1.glb",
-    "/assets/trees/Tree_2.glb",
-    "/assets/trees/Tree_3.glb",
-    "/assets/foliage/grass.glb",
+export const assetPaths = [
 
-    "/assets/avatars/Reimu.glb"
+    `${process.env.PUBLIC_URL}/assets/trees/Tree_1.glb`,
+    `${process.env.PUBLIC_URL}/assets/trees/Tree_2.glb`,
+    `${process.env.PUBLIC_URL}/assets/trees/Tree_3.glb`,
+    `${process.env.PUBLIC_URL}/assets/foliage/grass.glb`,
+
+    `${process.env.PUBLIC_URL}/assets/avatars/Reimu.glb`,
+
+    'sphere.function',
+    `${process.env.PUBLIC_URL}/assets/bullets/laser.glb`, //laser
+    `${process.env.PUBLIC_URL}/assets/bullets/test.glb`, //test
+
+    `${process.env.PUBLIC_URL}/assets/particles/hitParticles.particles`, //hit particles
+
+    `${process.env.PUBLIC_URL}/assets/sfx/enemyShoot.wav`
 ]
 
 export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnabled }) => {

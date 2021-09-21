@@ -1,9 +1,12 @@
 import {
     AbstractAssetTask,
     AssetContainer,
+    BinaryFileAssetTask,
     ContainerAssetTask,
-    Mesh, ParticleSystem,
+    Engine,
+    Mesh, MeshBuilder, ParticleSystem,
     Scene,
+    Sound,
     Texture,
     TextureAssetTask
 } from '@babylonjs/core';
@@ -11,6 +14,8 @@ import parsePath from 'parse-filepath';
 import React, { useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { CustomAssetsManager, ParticlesAssetTask } from '../forks/CustomAssetManager';
+import { QualityName } from '../utils/Constants';
+import { LS } from './LSContext';
 
 export interface Assets {
     containers: {
@@ -25,6 +30,9 @@ export interface Assets {
     particles: {
         [key: string]: ParticleSystem | undefined;
     };
+    sounds: {
+        [key: string]: Sound | undefined;
+    }
 }
 export interface IAssetContext {
     assets: Assets;
@@ -37,16 +45,43 @@ const defaultAssetContext: () => IAssetContext = () => ({
         textures: {},
         meshes: {},
         particles: {},
+        sounds: {},
     },
     assetsLoaded: false,
 });
 
 export const AssetContext = React.createContext<IAssetContext>(defaultAssetContext());
 
+const qualityMap: {
+    [key in QualityName]: {
+        segments: number;
+    };
+} = {
+    Hi: { segments: 10 },
+    Med: { segments: 6 },
+    Low: { segments: 3 },
+};
+
 const assetFunctions: { [key: string]: (scene: Scene) => Mesh } = {
+    sphere: (scene) => {
+        const mesh = MeshBuilder.CreateSphere(
+            'sphere',
+            {
+                diameter: 2,
+                segments: qualityMap[LS.QUALITY].segments || 10,
+                updatable: false,
+            },
+            scene,
+        );
+
+        mesh.isVisible = false;
+        return mesh;
+    },
 };
 
 const loadAssets = async (scene: Scene, assetPaths: string[]) => {
+    Engine.audioEngine = Engine.AudioEngineFactory(scene.getEngine().getRenderingCanvas());
+
     return new Promise<Assets>((resolve, reject) => {
         const assetsManager = new CustomAssetsManager(scene);
 
@@ -82,6 +117,11 @@ const loadAssets = async (scene: Scene, assetPaths: string[]) => {
                     assetTask = assetsManager.addParticlesTask(name, directory + '/');
                     assetTask.onError = console.error;
                     break;
+                case '.wav':
+                case '.mp3':
+                    assetTask = assetsManager.addBinaryFileTask(name, path);
+                    assetTask.onError = console.error;
+                    break;
                 default:
                     reject(`Unknown asset extension ${extension}`);
             }
@@ -102,15 +142,21 @@ const loadAssets = async (scene: Scene, assetPaths: string[]) => {
                     return;
                 }
                 if (task instanceof ParticlesAssetTask) {
-                    if (task.name in assets.particles) reject(`Duplicate container name ${task.name}`);
+                    if (task.name in assets.particles) reject(`Duplicate particle name ${task.name}`);
                     assets.particles[task.name] = task.loadedParticleSystem;
+                    return;
+                }
+                if (task instanceof BinaryFileAssetTask) {
+                    if (task.name in assets.sounds) reject(`Duplicate container name ${task.name}`);
+                    assets.sounds[task.name] = new Sound(task.name + "sound", task.data, scene, null, {
+                        loop: false
+                    });
                     return;
                 }
                 reject('task was not an instanceof any known AssetTask');
             });
 
             assets.meshes = loadedMeshes;
-
             resolve(assets);
         };
 
@@ -145,6 +191,7 @@ export const useAssetContext = (assetPaths: string[]) => {
             assets.containers = { ...internalAssets.containers, ...loadedAssets.containers };
             assets.meshes = { ...internalAssets.meshes, ...loadedAssets.meshes };
             assets.particles = { ...internalAssets.particles, ...loadedAssets.particles };
+            assets.sounds = { ...internalAssets.sounds, ...loadedAssets.sounds };
             setAssets(assets);
             setAssetsLoaded(true);
         });
