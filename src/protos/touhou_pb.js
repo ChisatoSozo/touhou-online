@@ -15,6 +15,8 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
+goog.exportSymbol('proto.touhou.AttackState', null, global);
+goog.exportSymbol('proto.touhou.Avatar', null, global);
 goog.exportSymbol('proto.touhou.Empty', null, global);
 goog.exportSymbol('proto.touhou.PlayerState', null, global);
 goog.exportSymbol('proto.touhou.Pose', null, global);
@@ -1416,7 +1418,9 @@ proto.touhou.PlayerState.prototype.toObject = function(opt_includeInstance) {
 proto.touhou.PlayerState.toObject = function(includeInstance, msg) {
   var f, obj = {
     username: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    rig: (f = msg.getRig()) && proto.touhou.Rig.toObject(includeInstance, f)
+    rig: (f = msg.getRig()) && proto.touhou.Rig.toObject(includeInstance, f),
+    avatar: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    attackState: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -1462,6 +1466,14 @@ proto.touhou.PlayerState.deserializeBinaryFromReader = function(msg, reader) {
       reader.readMessage(value,proto.touhou.Rig.deserializeBinaryFromReader);
       msg.setRig(value);
       break;
+    case 3:
+      var value = /** @type {!proto.touhou.Avatar} */ (reader.readEnum());
+      msg.setAvatar(value);
+      break;
+    case 4:
+      var value = /** @type {!proto.touhou.AttackState} */ (reader.readEnum());
+      msg.setAttackState(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1504,6 +1516,20 @@ proto.touhou.PlayerState.serializeBinaryToWriter = function(message, writer) {
       2,
       f,
       proto.touhou.Rig.serializeBinaryToWriter
+    );
+  }
+  f = message.getAvatar();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
+    );
+  }
+  f = message.getAttackState();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      4,
+      f
     );
   }
 };
@@ -1561,6 +1587,42 @@ proto.touhou.PlayerState.prototype.clearRig = function() {
  */
 proto.touhou.PlayerState.prototype.hasRig = function() {
   return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional Avatar avatar = 3;
+ * @return {!proto.touhou.Avatar}
+ */
+proto.touhou.PlayerState.prototype.getAvatar = function() {
+  return /** @type {!proto.touhou.Avatar} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.touhou.Avatar} value
+ * @return {!proto.touhou.PlayerState} returns this
+ */
+proto.touhou.PlayerState.prototype.setAvatar = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
+};
+
+
+/**
+ * optional AttackState attack_state = 4;
+ * @return {!proto.touhou.AttackState}
+ */
+proto.touhou.PlayerState.prototype.getAttackState = function() {
+  return /** @type {!proto.touhou.AttackState} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {!proto.touhou.AttackState} value
+ * @return {!proto.touhou.PlayerState} returns this
+ */
+proto.touhou.PlayerState.prototype.setAttackState = function(value) {
+  return jspb.Message.setProto3EnumField(this, 4, value);
 };
 
 
@@ -2011,5 +2073,21 @@ proto.touhou.World.prototype.clearTerrainList = function() {
   return this.setTerrainList([]);
 };
 
+
+/**
+ * @enum {number}
+ */
+proto.touhou.Avatar = {
+  REIMU: 0,
+  MARISA: 1
+};
+
+/**
+ * @enum {number}
+ */
+proto.touhou.AttackState = {
+  NOT_ATTACKING: 0,
+  ATTACKING: 1
+};
 
 goog.object.extend(exports, proto.touhou);

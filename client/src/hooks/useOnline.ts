@@ -1,10 +1,11 @@
 import { grpc } from '@improbable-eng/grpc-web';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { LS } from '../containers/LSContext';
 import { Empty, PlayerState, Rig, WorldState } from '../protos/touhou_pb';
 import { TouhouClient } from '../protos/touhou_pb_service';
 import { ONLINE } from '../utils/Switches';
 
-export const useOnline = (url: string, username: string) => {
+export const useOnline = (url: string) => {
     const client = useMemo(
         () =>
             new TouhouClient(url, {
@@ -18,11 +19,12 @@ export const useOnline = (url: string, username: string) => {
         (rig?: Rig) => {
             if (!ONLINE) return;
             const playerState = new PlayerState();
-            playerState.setUsername(username);
+            playerState.setUsername(LS.current.USERNAME);
+            playerState.setAvatar(LS.current.CHARACTER)
             playerState.setRig(rig);
             playerStateUpdateStream?.write(playerState);
         },
-        [playerStateUpdateStream, username],
+        [playerStateUpdateStream],
     );
 
     const [worldState, setWorldState] = useState<WorldState.AsObject>();

@@ -31,9 +31,21 @@ message Rig {
     Pose rightFoot = 7;
 }
 
+enum Avatar {
+    REIMU = 0;
+    MARISA = 1;
+}
+
+enum AttackState {
+    NOT_ATTACKING = 0;
+    ATTACKING = 1;
+}
+
 message PlayerState {
     string username = 1;
     Rig rig = 2;
+    Avatar avatar = 3;
+    AttackState attack_state = 4;
 }
 
 message WorldState {

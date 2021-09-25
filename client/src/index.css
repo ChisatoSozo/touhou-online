@@ -1,16 +1,31 @@
+@font-face {
+    font-family: 'tuhu';
+    src: url('./fonts/851CHIKARA-DZUYOKU_kanaA_004.ttf');
+}
+
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-        'Helvetica Neue', sans-serif;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow: hidden;
+}
+
+* {
+    font-family: tuhu !important;
+    font-size: 3vw;
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: white;
+}
+
+div {
+    outline: none;
+    border: 0px none black;
 }
 
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
-#root {
-    overflow: hidden;
+.game-canvas {
+    cursor: none;
 }

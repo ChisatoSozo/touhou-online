@@ -2,9 +2,7 @@ import {
     AbstractAssetTask,
     AssetContainer,
     BinaryFileAssetTask,
-    ContainerAssetTask,
-    Engine,
-    Mesh, MeshBuilder, ParticleSystem,
+    ContainerAssetTask, Mesh, MeshBuilder, ParticleSystem,
     Scene,
     Sound,
     Texture,
@@ -68,7 +66,7 @@ const assetFunctions: { [key: string]: (scene: Scene) => Mesh } = {
             'sphere',
             {
                 diameter: 2,
-                segments: qualityMap[LS.QUALITY].segments || 10,
+                segments: qualityMap[LS.current.QUALITY].segments || 10,
                 updatable: false,
             },
             scene,
@@ -80,7 +78,6 @@ const assetFunctions: { [key: string]: (scene: Scene) => Mesh } = {
 };
 
 const loadAssets = async (scene: Scene, assetPaths: string[]) => {
-    Engine.audioEngine = Engine.AudioEngineFactory(scene.getEngine().getRenderingCanvas());
 
     return new Promise<Assets>((resolve, reject) => {
         const assetsManager = new CustomAssetsManager(scene);

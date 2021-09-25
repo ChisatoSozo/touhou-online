@@ -1,23 +1,69 @@
 import { Mesh, TransformNode, Vector3 } from '@babylonjs/core';
-import React, { useContext, useEffect } from 'react';
-import { useScene } from 'react-babylonjs';
+import React, { useContext, useEffect, useRef } from 'react';
+import { useBeforeRender, useScene } from 'react-babylonjs';
+import { useAddBulletGroup } from '../hooks/useAddBulletGroup';
 import { useModel } from '../hooks/useModel';
 import { useOctree } from '../hooks/useOctree';
 import { ShadowContext } from '../lights/Sun';
+import { AttackState, Avatar, AvatarMap } from '../protos/touhou_pb';
+import { PreBulletInstruction } from '../types/BulletTypes';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { makeLogarithmic } from '../utils/MeshUtils';
-import { avatar } from '../utils/TempConst';
-import { PLAYER_POSE_STORE } from './PlayerPoseStore';
+import { createPlayerData, PlayerData, PLAYER_DATA_STORE, PLAYER_POSE_STORE } from './PlayerPoseStore';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface PlayerAvatarProps {
     username: string;
 }
+
+const avatarToModel: { [key in AvatarMap[keyof AvatarMap]]: string } = {
+    [Avatar.REIMU]: "Reimu",
+    [Avatar.MARISA]: "Marisa",
+}
+
+const tempInstruction: PreBulletInstruction = {
+    patternOptions: {
+        pattern: 'burst',
+        num: 300,
+        repeat: {
+            times: 5,
+            delay: 3,
+        },
+        speed: 2,
+        radius: 0.5,
+    },
+    meshOptions: {
+        mesh: 'sphere',
+        radius: 0.3,
+    },
+    materialOptions: {
+        material: 'fresnel',
+        color: [0, 0, 1],
+    },
+    behaviourOptions: {
+        behaviour: 'linear',
+        translationFromParent: true,
+        rotationFromParent: true,
+    },
+    endTimingOptions: {
+        timing: 'lifespan',
+        disablePrecomputation: false,
+        uid: '',
+    },
+    soundOptions: {
+        mute: false,
+        sound: 'enemyShoot',
+        uid: '',
+    },
+    lifespan: 20,
+}
+
 export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
     const scene = useScene()
-    const avatarModel = useModel(avatar);
+    const avatarModel = useModel(avatarToModel[PLAYER_DATA_STORE[username].avatar]);
     const octree = useOctree()
     const { addShadowCaster } = useContext(ShadowContext)
+    const addBulletGroup = useAddBulletGroup()
 
     useEffect(() => {
         if (!avatarModel?.mesh || !octree || !scene) return;
@@ -43,8 +89,22 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
         avatarModel.mesh.position = new Vector3(0, -0.2, 0);
         avatarModel.mesh.isVisible = true;
         addShadowCaster(avatarModel.mesh);
+
+        return () => {
+            avatarModel.mesh.dispose();
+            avatarModel.animationSkeleton?.dispose()
+            avatarModel.animationGroups?.forEach(group => group.dispose())
+        }
     }, [octree, avatarModel, scene, addShadowCaster, username]);
 
+    const lastPlayerState = useRef<PlayerData>(createPlayerData())
+    useBeforeRender(() => {
+        if (!addBulletGroup || !avatarModel?.mesh) return;
+        if (PLAYER_DATA_STORE[username].attackState === AttackState.ATTACKING && lastPlayerState.current.attackState === AttackState.NOT_ATTACKING) {
+            addBulletGroup(avatarModel.mesh.parent as TransformNode, tempInstruction);
+        }
+        lastPlayerState.current = { ...PLAYER_DATA_STORE[username] }
+    })
 
     return null;
     // return (

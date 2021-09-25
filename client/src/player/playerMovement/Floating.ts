@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from "@babylonjs/core";
 import { keyObject } from "../../containers/ControlsContext";
+import { LS } from "../../containers/LSContext";
 import { DOUBLE_TAP_TIMING, LATERAL_SPEED } from "../../utils/Constants";
-import { username } from "../../utils/TempConst";
 import { movementStateRef, MovementUpdateFunction } from "../PlayerMovement";
 import { PLAYER_POSE_STORE } from "../PlayerPoseStore";
 
@@ -58,12 +58,12 @@ export const doFloating: MovementUpdateFunction = (deltaS, mesh, terrainData, sc
     if (dFORWADS > 0) {
         const now = new Date()
         if (now.valueOf() - lastForwards.valueOf() < DOUBLE_TAP_TIMING) {
-            if (!PLAYER_POSE_STORE[username.current].root.rotation) return;
+            if (!PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation) return;
             // mesh.setAbsolutePosition(scene.activeCamera.position)
-            mesh.rotationQuaternion = PLAYER_POSE_STORE[username.current].root.rotation.clone();
-            PLAYER_POSE_STORE[username.current].root.rotation.copyFrom(new Quaternion());
-            mesh.setAbsolutePosition(PLAYER_POSE_STORE[username.current].root.position.add(PLAYER_POSE_STORE[username.current].head.position).clone());
-            PLAYER_POSE_STORE[username.current].head.position.copyFrom(new Vector3(0, 0, 0));
+            mesh.rotationQuaternion = PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.clone();
+            PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.copyFrom(new Quaternion());
+            mesh.setAbsolutePosition(PLAYER_POSE_STORE[LS.current.USERNAME].root.position.add(PLAYER_POSE_STORE[LS.current.USERNAME].head.position).clone());
+            PLAYER_POSE_STORE[LS.current.USERNAME].head.position.copyFrom(new Vector3(0, 0, 0));
 
             const newPhysicsImpostor = createPhysicsImpostor();
             if (!newPhysicsImpostor) return;

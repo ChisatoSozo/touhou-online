@@ -1,6 +1,5 @@
 
 import { Effect, Engine, RawTexture, Texture, Vector2, Vector3 } from '@babylonjs/core';
-import localstorage from 'local-storage';
 import React, { useContext, useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { HEIGHTMAP_MAX_HEIGHT } from '../utils/Constants';
@@ -116,10 +115,11 @@ export const TerrainDataProvider: React.FC<TerrainDataProviderProps> = ({ height
             // eslint-disable-next-line no-constant-condition
             const data: ArrayBuffer = await fetch(heightmapEndpoint + '/terrain', { mode: 'cors' }).then(response => response.arrayBuffer());
             const resultData = new Uint16Array(data)
+            let max = 0
             resultData.forEach((datum, i) => {
                 dataArray[i] = datum / HEIGHTMAP_MAX_HEIGHT;
+                if (datum > max) max = datum;
             })
-            console.log(localstorage('terrainData', JSON.stringify({ dataArray })))
             const heightData = new Float32Array(dataArray)
             const resolution = Math.sqrt(dataArray.length)
             const heightMap: number[][] = []

@@ -315,7 +315,7 @@ export const useBulletContext = (
                             globalActorRefs.enemies[enemyID].health -= bulletGroup.behaviour.bulletValue;
                             playHitSound.current = true;
                             if (globalActorRefs.enemies[enemyID]) {
-                                LS.SCORE += 10;
+                                LS.current.SCORE += 10;
                                 addEffect(collision.hit, {
                                     type: 'particles',
                                     name: 'hit',
@@ -330,36 +330,36 @@ export const useBulletContext = (
                     if (collisions.length > 0) {
                         const collision = collisions[0];
                         if (collision.point) {
-                            LS.POINT += collision.point / 2;
-                            LS.SCORE += 50000 * (collision.point / 2);
+                            LS.current.POINT += collision.point / 2;
+                            LS.current.SCORE += 50000 * (collision.point / 2);
                             // itemGet.play();
                         }
                         if (collision.power) {
-                            if (LS.POWER === 120) {
-                                LS.SCORE += 50000 * (collision.power / 2);
+                            if (LS.current.POWER === 120) {
+                                LS.current.SCORE += 50000 * (collision.power / 2);
                             } else {
-                                LS.POWER = Math.min(LS.POWER + collision.power / 2, 120);
+                                LS.current.POWER = Math.min(LS.current.POWER + collision.power / 2, 120);
                             }
                             // itemGet.play();
                         }
                         if (collision.player) {
                             if (!playerInvulnerable.current) {
-                                LS.PLAYER -= 1;
-                                LS.BOMB = LS.INITIAL_BOMB;
+                                LS.current.PLAYER -= 1;
+                                LS.current.BOMB = LS.current.INITIAL_BOMB;
                                 playerInvulnerable.current = true;
                                 window.setTimeout(() => {
                                     playerInvulnerable.current = false;
                                 }, PLAYER_INVULNERABLE_COOLDOWN * 1000);
                                 // playerDeath.play();
 
-                                if (LS.PLAYER === 0) {
+                                if (LS.current.PLAYER === 0) {
                                     window.setTimeout(() => setIsDead(true), 300);
                                 }
                             }
                         }
                         if (collision.graze) {
-                            LS.GRAZE += collision.graze / 2;
-                            LS.SCORE += 2000 * (collision.graze / 2);
+                            LS.current.GRAZE += collision.graze / 2;
+                            LS.current.SCORE += 2000 * (collision.graze / 2);
                             // playerGraze.play();
                         }
                     }

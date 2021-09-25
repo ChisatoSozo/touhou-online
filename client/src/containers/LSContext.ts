@@ -1,5 +1,8 @@
 import localstorage from 'local-storage';
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Avatar, AvatarMap } from '../protos/touhou_pb';
+import Music from '../sounds/Music';
+import * as SOUNDS from '../sounds/SFX';
 import { QualityName } from '../utils/Constants';
 
 export interface Score {
@@ -7,7 +10,12 @@ export interface Score {
     score: number;
 }
 
-interface ILS {
+
+export interface ILS {
+    //USER
+    USERNAME: string;
+    CHARACTER: AvatarMap[keyof AvatarMap];
+
     ///STATS
     HIGHEST_SCORE: number;
     CONTINUES_USED: number;
@@ -35,6 +43,10 @@ interface ILS {
 }
 
 const defaultLS: () => ILS = () => ({
+    //USER
+    USERNAME: "ERROR",
+    CHARACTER: Avatar.REIMU,
+
     ///STATS
     HIGHEST_SCORE: 10000,
     CONTINUES_USED: 0,
@@ -90,15 +102,50 @@ const defaultLS: () => ILS = () => ({
     ],
 });
 
-export const LS = defaultLS();
+export const LS = {
+    current: defaultLS()
+};
 
 const loadLS = () => {
     const loadedLS = JSON.parse(localstorage('LS') as unknown as string);
     if (!loadedLS) return;
-    Object.assign(LS, loadedLS);
+    Object.assign(LS.current, loadedLS);
 };
+loadLS();
 
 export const useLS = () => {
+    const [stateUpdate, setStateUpdate] = useState<number>(0);
+
+    const syncLS = useCallback(() => {
+        if (LS.current.MUSIC === 'ON') {
+            Music.play();
+        }
+
+        if (LS.current.MUSIC === 'OFF') {
+            Music.stop();
+        }
+
+        if (LS.current.SFX === 'OFF') {
+            for (const sound in SOUNDS) {
+                //@ts-ignore
+                if (SOUNDS[sound].stop) SOUNDS[sound].stop();
+            }
+        }
+        localstorage('LS', JSON.stringify(LS.current));
+    }, [])
+
+    const setLS = useCallback((key: keyof ILS, value: ILS[keyof ILS], synchronous?: boolean) => {
+        LS.current = { ...LS.current }
+        //@ts-ignore
+        LS.current[key] = value;
+        setStateUpdate(stateUpdate => stateUpdate + 1);
+        if (synchronous) syncLS()
+    }, [syncLS])
+
+    useEffect(() => {
+        syncLS()
+    }, [stateUpdate, syncLS])
+
     useMemo(() => loadLS(), []);
-    return LS;
+    return { setLS, LS: LS.current };
 };

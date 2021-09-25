@@ -1,11 +1,11 @@
 import { Mesh, PhysicsImpostor, Quaternion, Scene, Vector3 } from '@babylonjs/core';
 import React, { MutableRefObject, useCallback, useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
+import { LS } from '../containers/LSContext';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
 import { useOctree } from '../hooks/useOctree';
 import { ITerrainData, useTerrainData } from '../terrain/TerrainDataProvider';
 import { LOG_DEPTH } from '../utils/Switches';
-import { username } from '../utils/TempConst';
 import { snapVecToHeightmap } from '../utils/WorldUtils';
 import { MovementState } from './Player';
 import { doFalling } from './playerMovement/Falling';
@@ -48,7 +48,7 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = () => {
         if (!sphere?.physicsImpostor) return;
         sphere.physicsImpostor.dispose()
         sphere.physicsImpostor = null;
-        PLAYER_POSE_STORE[username.current].head.position.y = 1.88;
+        PLAYER_POSE_STORE[LS.current.USERNAME].head.position.y = 1.88;
     }, [sphere])
 
     const createPhysics = useCallback(() => {
@@ -91,9 +91,9 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = () => {
             sphere.rotationQuaternion = new Quaternion()
         }
 
-        PLAYER_POSE_STORE[username.current].root.position.copyFrom(sphere.getAbsolutePosition())
+        PLAYER_POSE_STORE[LS.current.USERNAME].root.position.copyFrom(sphere.getAbsolutePosition())
         if (movementStateRef.current === "flying") {
-            PLAYER_POSE_STORE[username.current].root.rotation.copyFrom(sphere.absoluteRotationQuaternion)
+            PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.copyFrom(sphere.absoluteRotationQuaternion)
         }
     });
 

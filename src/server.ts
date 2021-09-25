@@ -27,7 +27,7 @@ export class Server {
     this.terrainHeightArray = new Uint16Array(image.width * image.height);
     for (let i = 0; i < image.width; i++) {
       for (let j = 0; j < image.height; j++) {
-        this.terrainHeightArray[i * image.height + j]
+        this.terrainHeightArray[i * image.height + j] = image.getPixelXY(i, j)[0];
       }
     }
     this.app = express();

@@ -174,6 +174,12 @@ export class PlayerState extends jspb.Message {
   getRig(): Rig | undefined;
   setRig(value?: Rig): void;
 
+  getAvatar(): AvatarMap[keyof AvatarMap];
+  setAvatar(value: AvatarMap[keyof AvatarMap]): void;
+
+  getAttackState(): AttackStateMap[keyof AttackStateMap];
+  setAttackState(value: AttackStateMap[keyof AttackStateMap]): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PlayerState.AsObject;
   static toObject(includeInstance: boolean, msg: PlayerState): PlayerState.AsObject;
@@ -188,6 +194,8 @@ export namespace PlayerState {
   export type AsObject = {
     username: string,
     rig?: Rig.AsObject,
+    avatar: AvatarMap[keyof AvatarMap],
+    attackState: AttackStateMap[keyof AttackStateMap],
   }
 }
 
@@ -254,4 +262,18 @@ export namespace World {
     terrainList: Array<number>,
   }
 }
+
+export interface AvatarMap {
+  REIMU: 0;
+  MARISA: 1;
+}
+
+export const Avatar: AvatarMap;
+
+export interface AttackStateMap {
+  NOT_ATTACKING: 0;
+  ATTACKING: 1;
+}
+
+export const AttackState: AttackStateMap;
 

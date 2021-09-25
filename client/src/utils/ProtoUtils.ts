@@ -36,6 +36,7 @@ export const protoRig = (rig: InternalRig | undefined) => {
     leftHandPose.setOrientation(protoQuat(rig.leftHand?.rotation));
     rightHandPose.setPosition(protoVec(rig.rightHand?.position));
     rightHandPose.setOrientation(protoQuat(rig.rightHand?.rotation));
+    rigP.setRoot(rootPose);
     rigP.setHead(headPose);
     rigP.setLefthand(leftHandPose);
     rigP.setRighthand(rightHandPose);

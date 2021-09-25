@@ -19,7 +19,7 @@ interface TreesProps {
 
 const treeChildPaths = [[0, 1], [0, 1]];
 const treeModels = ["Tree_1", "Tree_3"];
-const treeResolution = 50;
+const treeResolution = 500;
 export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     const scene = useScene()
     const terrainData = useTerrainData()
@@ -74,7 +74,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
                 const z = Scalar.Lerp(-mapSize / 2, mapSize / 2, j / (treeResolution - 1)) + Scalar.RandomRange(-mapSize / (treeResolution * 2), mapSize / (treeResolution * 2));
 
                 const treeValue = simplex.noise2D(x / 800, z / 800);
-                if (treeValue > 0.3) continue;
+                if (treeValue > -0.8) continue;
 
                 const treeIndex = getRandomInt(0, mergedTrees.length - 1)
                 const treeNormal = terrainData.getNormalAtCoordinates(x, z);

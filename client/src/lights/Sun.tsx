@@ -4,6 +4,7 @@ import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
 import { useOctree } from '../hooks/useOctree';
+import { SHADOW } from '../utils/Switches';
 
 interface IShadowContext {
     addShadowCaster: (mesh: AbstractMesh) => void;
@@ -29,7 +30,7 @@ export const Sun: React.FC = ({ children }) => {
     }, [])
 
     useEffect(() => {
-        if (!sunRef.current) return;
+        if (!sunRef.current || !SHADOW) return;
 
         const shadowGenerator = new CascadedShadowGenerator(2048, sunRef.current);
         shadowGenerator.lambda = 0.9;

@@ -36,6 +36,8 @@ class ReactBabylonjsEngine extends React.Component {
             this.props.adaptToDeviceRatio === true ? true : false, // default false
         );
 
+        Engine.audioEngine = Engine.AudioEngineFactory(this.engine.getRenderingCanvas());
+
         this.engine.renderEvenInBackground = true;
 
         this.engine.runRenderLoop(() => {

@@ -3,9 +3,10 @@ import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { useCallback, useContext, useEffect } from 'react';
 import { useBeforeRender, useEngine } from 'react-babylonjs';
 import { ControlsContext, keyObject } from '../containers/ControlsContext';
-import { username } from '../utils/TempConst';
+import { LS } from '../containers/LSContext';
+import { AttackState } from '../protos/touhou_pb';
 import { movementStateRef } from './PlayerMovement';
-import { PLAYER_POSE_STORE } from './PlayerPoseStore';
+import { PLAYER_DATA_STORE, PLAYER_POSE_STORE } from './PlayerPoseStore';
 
 export const BindControls = () => {
     const engine = useEngine();
@@ -57,8 +58,15 @@ export const BindControls = () => {
         const upM = Matrix.RotationX((0.99 * keyObject.metaDownKeys.lookY) * Math.PI / 2);
         const rightM = Matrix.RotationY(keyObject.metaDownKeys.lookX * Math.PI);
 
-        PLAYER_POSE_STORE[username.current].head.rotation.copyFrom(Quaternion.FromRotationMatrix(upM));
-        PLAYER_POSE_STORE[username.current].root.rotation.copyFrom(Quaternion.FromRotationMatrix(rightM))
+        PLAYER_POSE_STORE[LS.current.USERNAME].head.rotation.copyFrom(Quaternion.FromRotationMatrix(upM));
+        PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.copyFrom(Quaternion.FromRotationMatrix(rightM))
+
+        if (keyObject.metaDownKeys["SHOOT"]) {
+            PLAYER_DATA_STORE[LS.current.USERNAME].attackState = AttackState.ATTACKING
+        }
+        else {
+            PLAYER_DATA_STORE[LS.current.USERNAME].attackState = AttackState.NOT_ATTACKING
+        }
     }, undefined, true);
 
     return null;

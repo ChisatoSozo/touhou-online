@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
+        "@material-ui/core": "^4.12.3",
         "@babylonjs/core": "^4.2.0",
         "@babylonjs/gui": "^4.2.0",
         "@babylonjs/loaders": "^4.2.0",
