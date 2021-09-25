@@ -1,5 +1,6 @@
 
 import { Effect, Engine, RawTexture, Texture, Vector2, Vector3 } from '@babylonjs/core';
+import localstorage from 'local-storage';
 import React, { useContext, useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { HEIGHTMAP_MAX_HEIGHT } from '../utils/Constants';
@@ -111,23 +112,23 @@ export const TerrainDataProvider: React.FC<TerrainDataProviderProps> = ({ height
     useEffect(() => {
         if (!scene) return;
         const getTerrainData = async () => {
-            const data: { data: number[] } = await fetch(heightmapEndpoint, { mode: 'cors' }).then(response => response.json());
-            const heightData = new Float32Array(data.data.length * 4)
-            data.data.forEach((datum, i) => {
-                heightData[i * 4] = datum / HEIGHTMAP_MAX_HEIGHT;
-                heightData[i * 4 + 1] = datum / HEIGHTMAP_MAX_HEIGHT;
-                heightData[i * 4 + 2] = datum / HEIGHTMAP_MAX_HEIGHT;
-                heightData[i * 4 + 3] = datum / HEIGHTMAP_MAX_HEIGHT;
+            const dataArray: number[] = [];
+            // eslint-disable-next-line no-constant-condition
+            const data: ArrayBuffer = await fetch(heightmapEndpoint + '/terrain', { mode: 'cors' }).then(response => response.arrayBuffer());
+            const resultData = new Uint16Array(data)
+            resultData.forEach((datum, i) => {
+                dataArray[i] = datum / HEIGHTMAP_MAX_HEIGHT;
             })
-
-            const resolution = Math.sqrt(data.data.length)
+            console.log(localstorage('terrainData', JSON.stringify({ dataArray })))
+            const heightData = new Float32Array(dataArray)
+            const resolution = Math.sqrt(dataArray.length)
             const heightMap: number[][] = []
-            data.data.forEach((height, i) => {
+            dataArray.forEach((height, i) => {
                 if (!heightMap) return;
                 const x = Math.floor(i / resolution);
                 const y = i % resolution;
                 if (!heightMap[x]) heightMap[x] = [];
-                heightMap[x][y] = height / HEIGHTMAP_MAX_HEIGHT;
+                heightMap[x][y] = height;
             })
 
             const logRes = Math.log2(resolution - 1)
@@ -135,7 +136,7 @@ export const TerrainDataProvider: React.FC<TerrainDataProviderProps> = ({ height
                 throw new Error("heightmap must be one more than a power of two, is: " + resolution)
             }
 
-            const heightTexture = RawTexture.CreateRGBATexture(heightData, resolution, resolution, scene, false, false, Engine.TEXTURE_BILINEAR_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
+            const heightTexture = RawTexture.CreateRTexture(heightData, resolution, resolution, scene, false, false, Engine.TEXTURE_BILINEAR_SAMPLINGMODE, Engine.TEXTURETYPE_FLOAT);
 
             const getHeightAtCoordinates = (x: number, z: number) => {
                 const inPos = new Vector2(x, z);

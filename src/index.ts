@@ -3,12 +3,7 @@ import { TouhouService } from './protos/touhou_grpc_pb';
 import { Server } from './server';
 import { TouhouServer } from './TouhouServer';
 
-const server = new Server();
-
-server.listen((port) => {
-    console.log(`Server is listening on http://localhost:${port}`);
-});
-
+new Server();
 const touhouServer = new grpc.Server();
 
 touhouServer.addService(TouhouService, new TouhouServer());

@@ -1,3 +1,4 @@
+import compression from "compression";
 import cors from "cors";
 import express, { Application } from "express";
 import { createServer, Server as HTTPServer } from "http";
@@ -5,12 +6,15 @@ import { Image } from 'image-js';
 import path from "path";
 import socketIO, { Server as SocketIOServer } from "socket.io";
 
+const version = 'height_new.png'
+
 export class Server {
   private httpServer: HTTPServer;
   private app: Application;
   private io: SocketIOServer;
 
   private activeSockets: string[] = [];
+  private terrainHeightArray?: Uint16Array;
 
   private readonly DEFAULT_PORT = 5000;
 
@@ -18,7 +22,14 @@ export class Server {
     this.initialize();
   }
 
-  private initialize(): void {
+  private async initialize(): Promise<void> {
+    let image = await Image.load(path.join(__dirname, `resources/${version}`));
+    this.terrainHeightArray = new Uint16Array(image.width * image.height);
+    for (let i = 0; i < image.width; i++) {
+      for (let j = 0; j < image.height; j++) {
+        this.terrainHeightArray[i * image.height + j]
+      }
+    }
     this.app = express();
     this.httpServer = createServer(this.app);
     this.io = socketIO(this.httpServer);
@@ -26,23 +37,27 @@ export class Server {
     this.configureApp();
     this.configureRoutes();
     this.handleSocketConnection();
+    this.listen((port) => {
+      console.log(`Server is listening on http://localhost:${port}`);
+    });
   }
 
   private configureApp(): void {
+    this.app.use(compression())
     this.app.use(cors())
     this.app.use(express.static(path.join(__dirname, "../public")));
   }
 
   private configureRoutes(): void {
     this.app.get("/terrain", async (req, res) => {
-      let image = await Image.load(path.join(__dirname, 'resources/height_new.png'));
-      const array = [];
-      for (let i = 0; i < image.width; i++) {
-        for (let j = 0; j < image.height; j++) {
-          array.push(image.getPixelXY(i, j)[0])
-        }
-      }
-      res.json({ data: array })
+      res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': this.terrainHeightArray.buffer.byteLength
+      });
+      res.end(Buffer.from(this.terrainHeightArray.buffer));
+    });
+    this.app.get("/terrainVersion", async (req, res) => {
+      res.json({ version })
     });
   }
 

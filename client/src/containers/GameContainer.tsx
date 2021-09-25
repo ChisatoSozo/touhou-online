@@ -43,7 +43,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnable
                 <TerrainContext.Provider value={terrain}>
                     <OctreeContext.Provider value={octree}>
                         <AssetContext.Provider value={assets}>
-                            <TerrainDataProvider heightmapEndpoint={`http://${window.location.hostname}:5000/terrain`} size={mapSize} height={heightScale}>
+                            <TerrainDataProvider heightmapEndpoint={`http://${window.location.hostname}:5000`} size={mapSize} height={heightScale}>
                                 {children}
                             </TerrainDataProvider>
                         </AssetContext.Provider>
