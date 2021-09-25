@@ -32,6 +32,10 @@ export const useOnline = (url: string, username: string) => {
         worldStateUpdateStream.on('data', (newWorldState) => {
             setWorldState(newWorldState.toObject());
         });
+
+        return () => {
+            worldStateUpdateStream.cancel();
+        }
     }, [client]);
 
     return { sendUpdate, worldState };

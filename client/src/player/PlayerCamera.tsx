@@ -1,47 +1,21 @@
-import { Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
-import React, { MutableRefObject } from 'react';
-import { useBeforeRender, useScene } from 'react-babylonjs';
-import { keyObject } from '../containers/ControlsContext';
+import { Vector3 } from '@babylonjs/core';
+import React from 'react';
+import { StableTransformNode } from '../utils/ReactBabylonUtils';
 import { THIRD_PERSON } from '../utils/Switches';
 import { username } from '../utils/TempConst';
-import { movementStateRef } from './PlayerMovement';
 import { PLAYER_POSE_STORE } from './PlayerPoseStore';
 
-const cameraPosition = new Vector3(0, 1.88, 0);
-
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface PlayerCameraProps {
-    head: MutableRefObject<TransformNode | undefined>
 }
 
-export const PlayerCamera: React.FC<PlayerCameraProps> = ({ head }) => {
-
-    const scene = useScene()
-
-    useBeforeRender(() => {
-        if (!head.current) return;
-        if (movementStateRef.current === "flying") return;
-
-        const upM = Matrix.RotationX((0.99 * keyObject.metaDownKeys.lookY) * Math.PI / 2);
-        const rightM = Matrix.RotationY(keyObject.metaDownKeys.lookX * Math.PI);
-        const _rightM = Matrix.RotationY(keyObject.metaDownKeys.lookX * Math.PI + Math.PI);
-
-        const matrix = Matrix.Identity().multiply(upM).multiply(rightM);
-
-        const _ = new Vector3();
-        const rotation = new Quaternion();
-
-        matrix.decompose(_, rotation);
-
-        head.current.rotationQuaternion = rotation;
-
-        PLAYER_POSE_STORE[username].root.rotation.copyFrom(Quaternion.FromRotationMatrix(_rightM))
-    });
+export const PlayerCamera: React.FC<PlayerCameraProps> = () => {
 
     return (
-        <>
-            <transformNode name="cameraTransform" ref={head} position={cameraPosition}>
+        <StableTransformNode name="cameraRootTransform" rotationQuaternion={PLAYER_POSE_STORE[username.current].root.rotation} position={PLAYER_POSE_STORE[username.current].root.position}>
+            <StableTransformNode name="cameraTransform" rotationQuaternion={PLAYER_POSE_STORE[username.current].head.rotation} position={PLAYER_POSE_STORE[username.current].head.position}>
                 <targetCamera fov={1.0472} name="camera" minZ={0.01} maxZ={10000} position={new Vector3(0, 0, THIRD_PERSON ? -5 : 0)} />
-            </transformNode>
-        </>
+            </StableTransformNode>
+        </StableTransformNode>
     );
 };

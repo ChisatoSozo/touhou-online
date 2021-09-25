@@ -36,6 +36,8 @@ class ReactBabylonjsEngine extends React.Component {
             this.props.adaptToDeviceRatio === true ? true : false, // default false
         );
 
+        this.engine.renderEvenInBackground = true;
+
         this.engine.runRenderLoop(() => {
             if (this.onBeforeRenderLoopObservable.hasObservers()) {
                 this.onBeforeRenderLoopObservable.notifyObservers(this.engine);

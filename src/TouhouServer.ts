@@ -21,26 +21,32 @@ export class TouhouServer implements ITouhouServer {
             const now = new Date();
             for (const username in this.worldState.playerRecency) {
                 if (now.valueOf() - this.worldState.playerRecency[username].valueOf() > 1000) {
+                    console.log(`${username} has left the game.`)
                     delete this.worldState.playerStates[username];
+                    delete this.worldState.playerRecency[username];
                 }
             }
-        }, 1000);
+        }, 10000);
     }
 
     playerStateUpdate(call): void {
         call.on('data', (playerState: PlayerState) => {
             const playerStateObj = playerState.toObject();
+            if (!this.worldState.playerStates[playerStateObj.username]) {
+                console.log(`${playerStateObj.username} has joined the game!`)
+            }
             this.worldState.playerStates[playerStateObj.username] = playerState;
             this.worldState.playerRecency[playerStateObj.username] = new Date();
         });
     }
+
     worldUpdate(call: ServerWritableStream<WorldState>) {
         setInterval(() => {
             const playerStates = Object.values(this.worldState.playerStates);
             const worldState = new WorldState();
             worldState.setPlayersList(playerStates);
             call.write(worldState);
-        }, 10);
+        }, 100);
 
         call.on('end', () => call.end());
     }

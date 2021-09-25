@@ -1,6 +1,11 @@
+import { Matrix } from '@babylonjs/core';
+import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { useCallback, useContext, useEffect } from 'react';
-import { useEngine } from 'react-babylonjs';
-import { ControlsContext } from '../containers/ControlsContext';
+import { useBeforeRender, useEngine } from 'react-babylonjs';
+import { ControlsContext, keyObject } from '../containers/ControlsContext';
+import { username } from '../utils/TempConst';
+import { movementStateRef } from './PlayerMovement';
+import { PLAYER_POSE_STORE } from './PlayerPoseStore';
 
 export const BindControls = () => {
     const engine = useEngine();
@@ -45,6 +50,16 @@ export const BindControls = () => {
             canvas.removeEventListener('pointerdown', capturePointer);
         };
     }, [capturePointer, engine, keyDownHandler, keyUpHandler]);
+
+    useBeforeRender(() => {
+        if (movementStateRef.current === "flying") return;
+
+        const upM = Matrix.RotationX((0.99 * keyObject.metaDownKeys.lookY) * Math.PI / 2);
+        const rightM = Matrix.RotationY(keyObject.metaDownKeys.lookX * Math.PI);
+
+        PLAYER_POSE_STORE[username.current].head.rotation.copyFrom(Quaternion.FromRotationMatrix(upM));
+        PLAYER_POSE_STORE[username.current].root.rotation.copyFrom(Quaternion.FromRotationMatrix(rightM))
+    }, undefined, true);
 
     return null;
 };

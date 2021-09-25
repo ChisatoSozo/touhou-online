@@ -1,5 +1,5 @@
 import { Quaternion, Vector3 } from '@babylonjs/core';
-import { InternalRig } from '../hooks/useRig';
+import { InternalRig } from '../player/PlayerPoseStore';
 import { Pose, Quaternion4D, Rig, Vector3D } from '../protos/touhou_pb';
 
 export const protoVec = (vector?: Vector3) => {
@@ -11,9 +11,8 @@ export const protoVec = (vector?: Vector3) => {
     return vecP;
 };
 
-export const protoEuler = (euler?: Vector3) => {
-    if (!euler) return;
-    const quat = Quaternion.FromEulerAngles(euler.x, euler.y, euler.z);
+export const protoQuat = (quat?: Quaternion) => {
+    if (!quat) return;
     const quatP = new Quaternion4D();
     quatP.setX(quat.x);
     quatP.setY(quat.y);
@@ -25,15 +24,18 @@ export const protoEuler = (euler?: Vector3) => {
 export const protoRig = (rig: InternalRig | undefined) => {
     if (!rig) return;
     const rigP = new Rig();
+    const rootPose = new Pose();
     const headPose = new Pose();
     const leftHandPose = new Pose();
     const rightHandPose = new Pose();
-    headPose.setPosition(protoVec(rig.head.position));
-    headPose.setOrientation(protoEuler(rig.head.rotation));
+    rootPose.setPosition(protoVec(rig.root.position));
+    rootPose.setOrientation(protoQuat(rig.root.rotation));
+    headPose.setPosition(protoVec(rig.head?.position));
+    headPose.setOrientation(protoQuat(rig.head?.rotation));
     leftHandPose.setPosition(protoVec(rig.leftHand?.position));
-    leftHandPose.setOrientation(protoEuler(rig.leftHand?.rotation));
+    leftHandPose.setOrientation(protoQuat(rig.leftHand?.rotation));
     rightHandPose.setPosition(protoVec(rig.rightHand?.position));
-    rightHandPose.setOrientation(protoEuler(rig.rightHand?.rotation));
+    rightHandPose.setOrientation(protoQuat(rig.rightHand?.rotation));
     rigP.setHead(headPose);
     rigP.setLefthand(leftHandPose);
     rigP.setRighthand(rightHandPose);
@@ -41,36 +43,40 @@ export const protoRig = (rig: InternalRig | undefined) => {
 };
 
 export const vecProto = (vector?: Vector3D.AsObject) => {
-    if (!vector) return Vector3.Zero();
+    if (!vector) return;
     return new Vector3(vector.x, vector.y, vector.z);
 };
 
-export const eulerProto = (quaternionP?: Quaternion4D.AsObject) => {
+export const quatProto = (quaternionP?: Quaternion4D.AsObject) => {
     if (!quaternionP) return;
     const quaternion = new Quaternion(quaternionP.x, quaternionP.y, quaternionP.z, quaternionP.w);
-    return quaternion.toEulerAngles();
+    return quaternion;
 };
 
-export const rigProto = (rig?: Rig.AsObject) => {
-    if (!rig) return;
+export const rigProto: (rig?: Rig.AsObject) => InternalRig | undefined = (rig) => {
+    if (!rig?.root || !rig?.head) return;
     return {
+        root: {
+            position: vecProto(rig.root.position) as Vector3,
+            rotation: quatProto(rig.root.orientation) as Quaternion,
+        },
         head: {
-            position: vecProto(rig?.head?.position),
-            rotation: eulerProto(rig.head?.orientation),
+            position: vecProto(rig.head.position) as Vector3,
+            rotation: quatProto(rig.head.orientation) as Quaternion,
         },
         leftHand:
             rig.lefthand?.position && rig.lefthand.orientation
                 ? {
-                      position: vecProto(rig.lefthand.position) as Vector3,
-                      rotation: eulerProto(rig.lefthand.orientation) as Vector3,
-                  }
+                    position: vecProto(rig.lefthand.position) as Vector3,
+                    rotation: quatProto(rig.lefthand.orientation) as Quaternion,
+                }
                 : undefined,
         rightHand:
             rig.righthand?.position && rig.righthand.orientation
                 ? {
-                      position: vecProto(rig.righthand.position) as Vector3,
-                      rotation: eulerProto(rig.righthand.orientation) as Vector3,
-                  }
+                    position: vecProto(rig.righthand.position) as Vector3,
+                    rotation: quatProto(rig.righthand.orientation) as Quaternion,
+                }
                 : undefined,
     };
 };

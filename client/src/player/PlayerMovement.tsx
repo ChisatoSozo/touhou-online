@@ -1,4 +1,4 @@
-import { Mesh, PhysicsImpostor, Quaternion, Scene, TransformNode, Vector3 } from '@babylonjs/core';
+import { Mesh, PhysicsImpostor, Quaternion, Scene, Vector3 } from '@babylonjs/core';
 import React, { MutableRefObject, useCallback, useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
@@ -12,7 +12,7 @@ import { doFalling } from './playerMovement/Falling';
 import { doFloating } from './playerMovement/Floating';
 import { doFlying } from './playerMovement/Flying';
 import { doWalking } from './playerMovement/Walking';
-import { PLAYER_POSE_STORE } from './PlayerPoseStore';
+import { getPlayerPosition, PLAYER_POSE_STORE } from './PlayerPoseStore';
 
 const playerPosition = new Vector3(0, 500, 0)
 
@@ -20,30 +20,17 @@ export const movementStateRef: MutableRefObject<MovementState> = {
     current: "walking"
 }
 
-export type MovementUpdateFunction = (deltaS: number, transform: Mesh, terrainData: ITerrainData, head: TransformNode, scene: Scene, createPhysics: () => PhysicsImpostor | undefined) => void;
+export type MovementUpdateFunction = (deltaS: number, transform: Mesh, terrainData: ITerrainData, scene: Scene, createPhysics: () => PhysicsImpostor | undefined) => void;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface PlayerMovementProps {
-    head: MutableRefObject<TransformNode | undefined>
 }
 
-export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }) => {
+export const PlayerMovement: React.FC<PlayerMovementProps> = () => {
     const [sphere, setSphere] = useState<Mesh>()
     const octree = useOctree();
     const terrainData = useTerrainData()
     const scene = useScene()
-
-    useEffect(() => {
-        PLAYER_POSE_STORE[username] = {
-            head: {
-                position: new Vector3(),
-                rotation: new Quaternion()
-            },
-            root: {
-                position: new Vector3(),
-                rotation: new Quaternion()
-            },
-        }
-    }, [])
 
     useEffect(() => {
         if (sphere && octree) {
@@ -58,11 +45,11 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
 
     const onCollision = useCallback(() => {
         movementStateRef.current = "walking";
-        if (!sphere?.physicsImpostor || !head.current) return;
+        if (!sphere?.physicsImpostor) return;
         sphere.physicsImpostor.dispose()
         sphere.physicsImpostor = null;
-        head.current.position = new Vector3(0, 1.88, 0);
-    }, [head, sphere])
+        PLAYER_POSE_STORE[username.current].head.position.y = 1.88;
+    }, [sphere])
 
     const createPhysics = useCallback(() => {
         if (!sphere || !scene) return;
@@ -77,25 +64,24 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
     }, [sphere, scene])
 
     useDeltaBeforeRender((scene, deltaS) => {
-        if (!sphere || !head.current) return
+        if (!sphere) return
 
-        const feetPos = sphere.position.subtract(new Vector3(0, 0.5, 0));
-        const terrainPos = feetPos.clone()
+        const terrainPos = getPlayerPosition()
         snapVecToHeightmap(terrainData, terrainPos)
-        if (feetPos.y < terrainPos.y && movementStateRef.current !== "walking") onCollision();
+        if (getPlayerPosition().y < terrainPos.y && movementStateRef.current !== "walking") onCollision();
 
         switch (movementStateRef.current) {
             case "walking":
-                doWalking(deltaS, sphere, terrainData, head.current, scene, createPhysics)
+                doWalking(deltaS, sphere, terrainData, scene, createPhysics)
                 break;
             case "falling":
-                doFalling(deltaS, sphere, terrainData, head.current, scene, createPhysics)
+                doFalling(deltaS, sphere, terrainData, scene, createPhysics)
                 break;
             case "floating":
-                doFloating(deltaS, sphere, terrainData, head.current, scene, createPhysics)
+                doFloating(deltaS, sphere, terrainData, scene, createPhysics)
                 break;
             case "flying":
-                doFlying(deltaS, sphere, terrainData, head.current, scene, createPhysics)
+                doFlying(deltaS, sphere, terrainData, scene, createPhysics)
                 break;
             default:
                 throw new Error("movement state not implemented: " + movementStateRef.current)
@@ -105,12 +91,13 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = ({ head, children }
             sphere.rotationQuaternion = new Quaternion()
         }
 
-        PLAYER_POSE_STORE[username].head.position.copyFrom(feetPos.add(new Vector3(0, 1.88, 0)))
-        PLAYER_POSE_STORE[username].root.position.copyFrom(feetPos)
+        PLAYER_POSE_STORE[username.current].root.position.copyFrom(sphere.getAbsolutePosition())
+        if (movementStateRef.current === "flying") {
+            PLAYER_POSE_STORE[username.current].root.rotation.copyFrom(sphere.absoluteRotationQuaternion)
+        }
     });
 
     return <sphere isVisible={false} name="cameraPosition" diameter={0.5} segments={4} ref={(sphere: Mesh) => setSphere(sphere)} position={playerPosition}>
         <standardMaterial name="playerMat" useLogarithmicDepth={LOG_DEPTH} />
-        {children}
     </sphere>;
 };

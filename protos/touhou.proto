@@ -22,9 +22,13 @@ message Pose {
 }
 
 message Rig {
-    Pose head = 1;
-    Pose leftHand = 2;
-    Pose rightHand = 3;
+    Pose root = 1;
+    Pose head = 2;
+    Pose leftHand = 3;
+    Pose rightHand = 4;
+    Pose hips = 5;
+    Pose leftFoot = 6;
+    Pose rightFoot = 7;
 }
 
 message PlayerState {

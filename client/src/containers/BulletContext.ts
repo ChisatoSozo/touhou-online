@@ -344,7 +344,6 @@ export const useBulletContext = (
                         }
                         if (collision.player) {
                             if (!playerInvulnerable.current) {
-                                console.log('hit');
                                 LS.PLAYER -= 1;
                                 LS.BOMB = LS.INITIAL_BOMB;
                                 playerInvulnerable.current = true;

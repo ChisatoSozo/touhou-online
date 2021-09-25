@@ -34,7 +34,6 @@ export const makeBulletSound = (soundOptions: SoundOptions, timings: number[], a
 
     //@ts-ignore
     const soundObj = assets.sounds[soundOptions.sound];
-    console.log(assets)
     if (!soundObj) throw new Error(`Sound ${soundOptions.sound} not found`)
 
     return new EnemySound(soundObj, reducedTimings);

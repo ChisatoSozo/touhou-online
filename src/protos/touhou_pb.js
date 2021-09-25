@@ -958,9 +958,13 @@ proto.touhou.Rig.prototype.toObject = function(opt_includeInstance) {
  */
 proto.touhou.Rig.toObject = function(includeInstance, msg) {
   var f, obj = {
+    root: (f = msg.getRoot()) && proto.touhou.Pose.toObject(includeInstance, f),
     head: (f = msg.getHead()) && proto.touhou.Pose.toObject(includeInstance, f),
     lefthand: (f = msg.getLefthand()) && proto.touhou.Pose.toObject(includeInstance, f),
-    righthand: (f = msg.getRighthand()) && proto.touhou.Pose.toObject(includeInstance, f)
+    righthand: (f = msg.getRighthand()) && proto.touhou.Pose.toObject(includeInstance, f),
+    hips: (f = msg.getHips()) && proto.touhou.Pose.toObject(includeInstance, f),
+    leftfoot: (f = msg.getLeftfoot()) && proto.touhou.Pose.toObject(includeInstance, f),
+    rightfoot: (f = msg.getRightfoot()) && proto.touhou.Pose.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -1000,17 +1004,37 @@ proto.touhou.Rig.deserializeBinaryFromReader = function(msg, reader) {
     case 1:
       var value = new proto.touhou.Pose;
       reader.readMessage(value,proto.touhou.Pose.deserializeBinaryFromReader);
-      msg.setHead(value);
+      msg.setRoot(value);
       break;
     case 2:
       var value = new proto.touhou.Pose;
       reader.readMessage(value,proto.touhou.Pose.deserializeBinaryFromReader);
-      msg.setLefthand(value);
+      msg.setHead(value);
       break;
     case 3:
       var value = new proto.touhou.Pose;
       reader.readMessage(value,proto.touhou.Pose.deserializeBinaryFromReader);
+      msg.setLefthand(value);
+      break;
+    case 4:
+      var value = new proto.touhou.Pose;
+      reader.readMessage(value,proto.touhou.Pose.deserializeBinaryFromReader);
       msg.setRighthand(value);
+      break;
+    case 5:
+      var value = new proto.touhou.Pose;
+      reader.readMessage(value,proto.touhou.Pose.deserializeBinaryFromReader);
+      msg.setHips(value);
+      break;
+    case 6:
+      var value = new proto.touhou.Pose;
+      reader.readMessage(value,proto.touhou.Pose.deserializeBinaryFromReader);
+      msg.setLeftfoot(value);
+      break;
+    case 7:
+      var value = new proto.touhou.Pose;
+      reader.readMessage(value,proto.touhou.Pose.deserializeBinaryFromReader);
+      msg.setRightfoot(value);
       break;
     default:
       reader.skipField();
@@ -1041,7 +1065,7 @@ proto.touhou.Rig.prototype.serializeBinary = function() {
  */
 proto.touhou.Rig.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getHead();
+  f = message.getRoot();
   if (f != null) {
     writer.writeMessage(
       1,
@@ -1049,7 +1073,7 @@ proto.touhou.Rig.serializeBinaryToWriter = function(message, writer) {
       proto.touhou.Pose.serializeBinaryToWriter
     );
   }
-  f = message.getLefthand();
+  f = message.getHead();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -1057,10 +1081,42 @@ proto.touhou.Rig.serializeBinaryToWriter = function(message, writer) {
       proto.touhou.Pose.serializeBinaryToWriter
     );
   }
-  f = message.getRighthand();
+  f = message.getLefthand();
   if (f != null) {
     writer.writeMessage(
       3,
+      f,
+      proto.touhou.Pose.serializeBinaryToWriter
+    );
+  }
+  f = message.getRighthand();
+  if (f != null) {
+    writer.writeMessage(
+      4,
+      f,
+      proto.touhou.Pose.serializeBinaryToWriter
+    );
+  }
+  f = message.getHips();
+  if (f != null) {
+    writer.writeMessage(
+      5,
+      f,
+      proto.touhou.Pose.serializeBinaryToWriter
+    );
+  }
+  f = message.getLeftfoot();
+  if (f != null) {
+    writer.writeMessage(
+      6,
+      f,
+      proto.touhou.Pose.serializeBinaryToWriter
+    );
+  }
+  f = message.getRightfoot();
+  if (f != null) {
+    writer.writeMessage(
+      7,
       f,
       proto.touhou.Pose.serializeBinaryToWriter
     );
@@ -1069,10 +1125,10 @@ proto.touhou.Rig.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional Pose head = 1;
+ * optional Pose root = 1;
  * @return {?proto.touhou.Pose}
  */
-proto.touhou.Rig.prototype.getHead = function() {
+proto.touhou.Rig.prototype.getRoot = function() {
   return /** @type{?proto.touhou.Pose} */ (
     jspb.Message.getWrapperField(this, proto.touhou.Pose, 1));
 };
@@ -1082,8 +1138,45 @@ proto.touhou.Rig.prototype.getHead = function() {
  * @param {?proto.touhou.Pose|undefined} value
  * @return {!proto.touhou.Rig} returns this
 */
-proto.touhou.Rig.prototype.setHead = function(value) {
+proto.touhou.Rig.prototype.setRoot = function(value) {
   return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.touhou.Rig} returns this
+ */
+proto.touhou.Rig.prototype.clearRoot = function() {
+  return this.setRoot(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.touhou.Rig.prototype.hasRoot = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional Pose head = 2;
+ * @return {?proto.touhou.Pose}
+ */
+proto.touhou.Rig.prototype.getHead = function() {
+  return /** @type{?proto.touhou.Pose} */ (
+    jspb.Message.getWrapperField(this, proto.touhou.Pose, 2));
+};
+
+
+/**
+ * @param {?proto.touhou.Pose|undefined} value
+ * @return {!proto.touhou.Rig} returns this
+*/
+proto.touhou.Rig.prototype.setHead = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
 };
 
 
@@ -1101,17 +1194,17 @@ proto.touhou.Rig.prototype.clearHead = function() {
  * @return {boolean}
  */
 proto.touhou.Rig.prototype.hasHead = function() {
-  return jspb.Message.getField(this, 1) != null;
+  return jspb.Message.getField(this, 2) != null;
 };
 
 
 /**
- * optional Pose leftHand = 2;
+ * optional Pose leftHand = 3;
  * @return {?proto.touhou.Pose}
  */
 proto.touhou.Rig.prototype.getLefthand = function() {
   return /** @type{?proto.touhou.Pose} */ (
-    jspb.Message.getWrapperField(this, proto.touhou.Pose, 2));
+    jspb.Message.getWrapperField(this, proto.touhou.Pose, 3));
 };
 
 
@@ -1120,7 +1213,7 @@ proto.touhou.Rig.prototype.getLefthand = function() {
  * @return {!proto.touhou.Rig} returns this
 */
 proto.touhou.Rig.prototype.setLefthand = function(value) {
-  return jspb.Message.setWrapperField(this, 2, value);
+  return jspb.Message.setWrapperField(this, 3, value);
 };
 
 
@@ -1138,17 +1231,17 @@ proto.touhou.Rig.prototype.clearLefthand = function() {
  * @return {boolean}
  */
 proto.touhou.Rig.prototype.hasLefthand = function() {
-  return jspb.Message.getField(this, 2) != null;
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
 /**
- * optional Pose rightHand = 3;
+ * optional Pose rightHand = 4;
  * @return {?proto.touhou.Pose}
  */
 proto.touhou.Rig.prototype.getRighthand = function() {
   return /** @type{?proto.touhou.Pose} */ (
-    jspb.Message.getWrapperField(this, proto.touhou.Pose, 3));
+    jspb.Message.getWrapperField(this, proto.touhou.Pose, 4));
 };
 
 
@@ -1157,7 +1250,7 @@ proto.touhou.Rig.prototype.getRighthand = function() {
  * @return {!proto.touhou.Rig} returns this
 */
 proto.touhou.Rig.prototype.setRighthand = function(value) {
-  return jspb.Message.setWrapperField(this, 3, value);
+  return jspb.Message.setWrapperField(this, 4, value);
 };
 
 
@@ -1175,7 +1268,118 @@ proto.touhou.Rig.prototype.clearRighthand = function() {
  * @return {boolean}
  */
 proto.touhou.Rig.prototype.hasRighthand = function() {
-  return jspb.Message.getField(this, 3) != null;
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional Pose hips = 5;
+ * @return {?proto.touhou.Pose}
+ */
+proto.touhou.Rig.prototype.getHips = function() {
+  return /** @type{?proto.touhou.Pose} */ (
+    jspb.Message.getWrapperField(this, proto.touhou.Pose, 5));
+};
+
+
+/**
+ * @param {?proto.touhou.Pose|undefined} value
+ * @return {!proto.touhou.Rig} returns this
+*/
+proto.touhou.Rig.prototype.setHips = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.touhou.Rig} returns this
+ */
+proto.touhou.Rig.prototype.clearHips = function() {
+  return this.setHips(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.touhou.Rig.prototype.hasHips = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional Pose leftFoot = 6;
+ * @return {?proto.touhou.Pose}
+ */
+proto.touhou.Rig.prototype.getLeftfoot = function() {
+  return /** @type{?proto.touhou.Pose} */ (
+    jspb.Message.getWrapperField(this, proto.touhou.Pose, 6));
+};
+
+
+/**
+ * @param {?proto.touhou.Pose|undefined} value
+ * @return {!proto.touhou.Rig} returns this
+*/
+proto.touhou.Rig.prototype.setLeftfoot = function(value) {
+  return jspb.Message.setWrapperField(this, 6, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.touhou.Rig} returns this
+ */
+proto.touhou.Rig.prototype.clearLeftfoot = function() {
+  return this.setLeftfoot(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.touhou.Rig.prototype.hasLeftfoot = function() {
+  return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional Pose rightFoot = 7;
+ * @return {?proto.touhou.Pose}
+ */
+proto.touhou.Rig.prototype.getRightfoot = function() {
+  return /** @type{?proto.touhou.Pose} */ (
+    jspb.Message.getWrapperField(this, proto.touhou.Pose, 7));
+};
+
+
+/**
+ * @param {?proto.touhou.Pose|undefined} value
+ * @return {!proto.touhou.Rig} returns this
+*/
+proto.touhou.Rig.prototype.setRightfoot = function(value) {
+  return jspb.Message.setWrapperField(this, 7, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.touhou.Rig} returns this
+ */
+proto.touhou.Rig.prototype.clearRightfoot = function() {
+  return this.setRightfoot(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.touhou.Rig.prototype.hasRightfoot = function() {
+  return jspb.Message.getField(this, 7) != null;
 };
 
 

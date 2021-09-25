@@ -1,12 +1,14 @@
 import { Quaternion, Vector3 } from "@babylonjs/core";
 import { keyObject } from "../../containers/ControlsContext";
 import { DOUBLE_TAP_TIMING, LATERAL_SPEED } from "../../utils/Constants";
+import { username } from "../../utils/TempConst";
 import { movementStateRef, MovementUpdateFunction } from "../PlayerMovement";
+import { PLAYER_POSE_STORE } from "../PlayerPoseStore";
 
 let lastDown = new Date()
 let lastForwards = new Date()
 
-export const doFloating: MovementUpdateFunction = (deltaS, mesh, terrainData, head, scene, createPhysicsImpostor) => {
+export const doFloating: MovementUpdateFunction = (deltaS, mesh, terrainData, scene, createPhysicsImpostor) => {
     if (!terrainData.getHeightAtCoordinates) return;
 
     const FORWARD = keyObject.metaDownKeys['FORWARD'];
@@ -56,12 +58,12 @@ export const doFloating: MovementUpdateFunction = (deltaS, mesh, terrainData, he
     if (dFORWADS > 0) {
         const now = new Date()
         if (now.valueOf() - lastForwards.valueOf() < DOUBLE_TAP_TIMING) {
-            if (!head.rotationQuaternion) return;
+            if (!PLAYER_POSE_STORE[username.current].root.rotation) return;
             // mesh.setAbsolutePosition(scene.activeCamera.position)
-            mesh.rotationQuaternion = head.rotationQuaternion.clone();
-            head.rotationQuaternion = new Quaternion();
-            mesh.setAbsolutePosition(head.getAbsolutePosition().clone());
-            head.position = new Vector3(0, 0, 0);
+            mesh.rotationQuaternion = PLAYER_POSE_STORE[username.current].root.rotation.clone();
+            PLAYER_POSE_STORE[username.current].root.rotation.copyFrom(new Quaternion());
+            mesh.setAbsolutePosition(PLAYER_POSE_STORE[username.current].root.position.add(PLAYER_POSE_STORE[username.current].head.position).clone());
+            PLAYER_POSE_STORE[username.current].head.position.copyFrom(new Vector3(0, 0, 0));
 
             const newPhysicsImpostor = createPhysicsImpostor();
             if (!newPhysicsImpostor) return;

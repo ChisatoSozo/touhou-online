@@ -19,7 +19,7 @@ interface TreesProps {
 
 const treeChildPaths = [[0, 1], [0, 1]];
 const treeModels = ["Tree_1", "Tree_3"];
-const treeResolution = 250;
+const treeResolution = 50;
 export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     const scene = useScene()
     const terrainData = useTerrainData()
@@ -54,13 +54,12 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
         const trunkTexture = RawTexture.CreateRGBATexture(new Uint8Array([128, 64, 0, 255]), 1, 1, scene);
 
         mergedTrees.forEach(mergedTree => {
-            mergedTree.scaling = new Vector3(10, 10, 10)
+            mergedTree.scaling = new Vector3(5, 5, 5)
             mergedTree.isVisible = false;
             mergedTree.receiveShadows = true;
             const newMultiMaterial = new MultiMaterial("treeMat", scene);
             (mergedTree.material as MultiMaterial).subMaterials.forEach((mat, i) => {
                 if (!mat) return;
-                console.log(mat);
                 const newMaterial = makeCellMaterial("cellMat", i === 0 ? leafTexture : trunkTexture, scene, 0);
                 newMaterial.useLogarithmicDepth = LOG_DEPTH
                 newMultiMaterial.subMaterials.push(newMaterial)
@@ -80,7 +79,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
                 const treeIndex = getRandomInt(0, mergedTrees.length - 1)
                 const treeNormal = terrainData.getNormalAtCoordinates(x, z);
                 const treeVec = new Vector3(x, 0, z)
-                snapVecToHeightmap(terrainData, treeVec, -0.5)
+                snapVecToHeightmap(terrainData, treeVec, -1)
 
                 if (treeVec.y > heightScale * 0.55 || treeVec.y < heightScale * 0.3410 || treeNormal.y < 0.8) continue;
 

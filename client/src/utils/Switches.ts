@@ -1,4 +1,4 @@
-export const ONLINE = false;
+export const ONLINE = true;
 export const CREATIVE = true;
 export const LOG_DEPTH = true;
 

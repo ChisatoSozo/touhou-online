@@ -1,4 +1,4 @@
-import { Mesh, Vector3 } from '@babylonjs/core';
+import { Mesh, TransformNode, Vector3 } from '@babylonjs/core';
 import React, { useContext, useEffect } from 'react';
 import { useScene } from 'react-babylonjs';
 import { useModel } from '../hooks/useModel';
@@ -9,19 +9,7 @@ import { makeLogarithmic } from '../utils/MeshUtils';
 import { avatar } from '../utils/TempConst';
 import { PLAYER_POSE_STORE } from './PlayerPoseStore';
 
-// const tempDef: AvatarDefinition = {
-//     ikDefinition: {
-//         leftShoulderBone: 'bone13',
-//         leftElbowBone: 'bone14',
-//         leftWristBone: 'bone15',
-
-//         rightShoulderBone: 'bone32',
-//         rightElbowBone: 'bone33',
-//         rightWristBone: 'bone34',
-//     },
-//     viewHeight: 1.88,
-// };
-
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface PlayerAvatarProps {
     username: string;
 }
@@ -35,7 +23,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
         if (!avatarModel?.mesh || !octree || !scene) return;
 
         makeLogarithmic(avatarModel.mesh);
-        avatarModel.mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+        avatarModel.mesh.scaling = new Vector3(0.2, 0.2, 0.2);
         avatarModel.mesh.alwaysSelectAsActiveMesh = true;
         avatarModel.mesh.receiveShadows = true;
         avatarModel.mesh.getChildren(undefined, false).forEach(child => {
@@ -43,17 +31,19 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
                 octree.dynamicContent.push(child);
                 child.alwaysSelectAsActiveMesh = true
                 child.receiveShadows = true;
-                child.isVisible = false;
             }
         })
         octree.dynamicContent.push(avatarModel.mesh);
         scene.createOrUpdateSelectionOctree(MAX_MESHES_IN_SCENE)
-        avatarModel.mesh.position = PLAYER_POSE_STORE[username].root.position
-        avatarModel.mesh.rotationQuaternion = PLAYER_POSE_STORE[username].root.rotation
-        avatarModel.mesh.isVisible = false;
+        const avatarTransformNode = new TransformNode("avatarNode", scene)
+        avatarTransformNode.position = PLAYER_POSE_STORE[username].root.position
+        avatarTransformNode.rotationQuaternion = PLAYER_POSE_STORE[username].root.rotation
+        avatarModel.mesh.parent = avatarTransformNode;
+        avatarModel.mesh.rotation = new Vector3(0, Math.PI, 0);
+        avatarModel.mesh.position = new Vector3(0, -0.2, 0);
+        avatarModel.mesh.isVisible = true;
         addShadowCaster(avatarModel.mesh);
-    }, [octree, avatarModel, scene, username, addShadowCaster]);
-
+    }, [octree, avatarModel, scene, addShadowCaster, username]);
 
 
     return null;

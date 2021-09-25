@@ -108,6 +108,11 @@ export namespace Pose {
 }
 
 export class Rig extends jspb.Message {
+  hasRoot(): boolean;
+  clearRoot(): void;
+  getRoot(): Pose | undefined;
+  setRoot(value?: Pose): void;
+
   hasHead(): boolean;
   clearHead(): void;
   getHead(): Pose | undefined;
@@ -123,6 +128,21 @@ export class Rig extends jspb.Message {
   getRighthand(): Pose | undefined;
   setRighthand(value?: Pose): void;
 
+  hasHips(): boolean;
+  clearHips(): void;
+  getHips(): Pose | undefined;
+  setHips(value?: Pose): void;
+
+  hasLeftfoot(): boolean;
+  clearLeftfoot(): void;
+  getLeftfoot(): Pose | undefined;
+  setLeftfoot(value?: Pose): void;
+
+  hasRightfoot(): boolean;
+  clearRightfoot(): void;
+  getRightfoot(): Pose | undefined;
+  setRightfoot(value?: Pose): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Rig.AsObject;
   static toObject(includeInstance: boolean, msg: Rig): Rig.AsObject;
@@ -135,9 +155,13 @@ export class Rig extends jspb.Message {
 
 export namespace Rig {
   export type AsObject = {
+    root?: Pose.AsObject,
     head?: Pose.AsObject,
     lefthand?: Pose.AsObject,
     righthand?: Pose.AsObject,
+    hips?: Pose.AsObject,
+    leftfoot?: Pose.AsObject,
+    rightfoot?: Pose.AsObject,
   }
 }
 

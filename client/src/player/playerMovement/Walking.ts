@@ -10,7 +10,7 @@ const isUnderground = (vec: Vector3, terrainData: ITerrainData) => {
     return vec.y < terrainData.getHeightAtCoordinates(vec.x, vec.z);
 }
 
-export const doWalking: MovementUpdateFunction = (deltaS, mesh, terrainData, head, scene, createPhysicsImpostor) => {
+export const doWalking: MovementUpdateFunction = (deltaS, mesh, terrainData, scene, createPhysicsImpostor) => {
 
     const FORWARD = keyObject.metaDownKeys['FORWARD'];
     const BACK = keyObject.metaDownKeys['BACK'];
