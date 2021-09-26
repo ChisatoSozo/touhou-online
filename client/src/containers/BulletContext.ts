@@ -1,4 +1,4 @@
-import { GlowLayer, Mesh, ShaderMaterial, TransformNode, Vector3 } from '@babylonjs/core';
+import { AbstractMesh, GlowLayer, Mesh, Octree, ShaderMaterial, TransformNode, Vector3 } from '@babylonjs/core';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { v4 as uuid } from 'uuid';
@@ -145,10 +145,11 @@ interface BulletGroupMap {
     [key: string]: BulletGroup;
 }
 
-const bulletGroupDispose = (group: BulletGroup, glowLayer: GlowLayer) => {
+const bulletGroupDispose = (group: BulletGroup, glowLayer: GlowLayer, octree?: Octree<AbstractMesh>) => {
     if (group.glow) {
         glowLayer.unReferenceMeshFromUsingItsOwnMaterial(group.mesh);
     }
+    if (octree) octree.dynamicContent.splice(octree.dynamicContent.indexOf(group.mesh), 1)
     group.material.dispose();
     group.behaviour.dispose();
     group.mesh.dispose();
@@ -163,6 +164,7 @@ export const useBulletContext = (
     effects: IEffectContext,
     glowLayer: GlowLayer,
     environmentCollision: Vector3,
+    octree?: Octree<AbstractMesh>
 ) => {
     const scene = useScene();
     const playHitSound = useRef(false);
@@ -216,6 +218,7 @@ export const useBulletContext = (
             } = makeBulletPattern(preparedInstruction.patternOptions, bulletCache, scene, supressNotPrecomputedWarning);
 
             const mesh = makeBulletMesh(preparedInstruction.meshOptions, assets, scene);
+            if (octree) octree.dynamicContent.push(mesh)
             const behaviour = makeBulletBehaviour(
                 preparedInstruction.behaviourOptions,
                 environmentCollision,

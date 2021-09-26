@@ -44,7 +44,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnable
     const assets = useAssetContext(assetPaths);
     const effects = useEffectContext(assets.assets);
     const glow = useGlowContext()
-    const bullets = useBulletContext(assets, effects, glow.glowLayer, new Vector3(0, 0, 0))
+    const bullets = useBulletContext(assets, effects, glow.glowLayer, new Vector3(0, 0, 0), octree.octree)
 
     return (
         <ControlsContext.Provider value={controls}>

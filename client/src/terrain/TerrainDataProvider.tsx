@@ -71,7 +71,7 @@ export const useTerrainData = () => {
 
 const getNormal = (heightMap: number[][], resolution: number, size: number, height: number, i: number, j: number) => {
 
-    if (i === 0 || j === 0 || i === resolution - 1 || j === resolution - 1) return new Vector3(0, 1, 0);
+    if (i === 0 || j === 0 || i === resolution - 1 || j === resolution - 1) return [0, 1, 0];
 
     const pixelSize = 1.;
     const cellSize = size / resolution;
@@ -81,12 +81,15 @@ const getNormal = (heightMap: number[][], resolution: number, size: number, heig
     const r = heightMap[i + pixelSize][j] * height;
     const d = heightMap[i][j - pixelSize] * height;
 
-    const vu = new Vector3(0, u, cellSize);
-    const vd = new Vector3(0, d, -cellSize);
-    const vr = new Vector3(cellSize, r, 0);
-    const vl = new Vector3(-cellSize, l, 0);
+    const first = [0, u - d, 2 * cellSize]
+    const second = [2 * cellSize, r - l, 0]
 
-    return vu.subtract(vd).cross(vr.subtract(vl)).normalize();
+    const x = -first[2] * second[1];
+    const y = first[2] * second[0];
+    const z = -first[1] * second[0];
+
+    const len = Math.sqrt(x * x + y * y + z * z)
+    return [x / len, y / len, z / len];
 }
 
 const calcNormals = (heightMap: number[][], resolution: number, size: number, height: number) => {
@@ -95,9 +98,9 @@ const calcNormals = (heightMap: number[][], resolution: number, size: number, he
         for (let j = 0; j < resolution; j++) {
             const index = i * resolution + j;
             const normal = getNormal(heightMap, resolution, size, height, i, j);
-            normalBuffer[index * 4 + 0] = normal.x;
-            normalBuffer[index * 4 + 1] = normal.y;
-            normalBuffer[index * 4 + 2] = normal.z;
+            normalBuffer[index * 4 + 0] = normal[0];
+            normalBuffer[index * 4 + 1] = normal[1];
+            normalBuffer[index * 4 + 2] = normal[2];
             normalBuffer[index * 4 + 0] = 0;
         }
     }

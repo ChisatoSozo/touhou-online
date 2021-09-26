@@ -24,17 +24,17 @@ const avatarToModel: { [key in AvatarMap[keyof AvatarMap]]: string } = {
 const tempInstruction: PreBulletInstruction = {
     patternOptions: {
         pattern: 'burst',
-        num: 300,
+        num: 1000,
         repeat: {
             times: 5,
             delay: 3,
         },
-        speed: 2,
-        radius: 0.5,
+        speed: 3,
+        radius: 2,
     },
     meshOptions: {
         mesh: 'sphere',
-        radius: 0.3,
+        radius: 1,
     },
     materialOptions: {
         material: 'fresnel',
