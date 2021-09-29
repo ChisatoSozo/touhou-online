@@ -60,8 +60,8 @@ export const doFloating: MovementUpdateFunction = (deltaS, mesh, terrainData, sc
         if (now.valueOf() - lastForwards.valueOf() < DOUBLE_TAP_TIMING) {
             if (!PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation) return;
             // mesh.setAbsolutePosition(scene.activeCamera.position)
-            mesh.rotationQuaternion = PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.clone();
-            PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.copyFrom(new Quaternion());
+            PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.copyFrom(PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.multiply(PLAYER_POSE_STORE[LS.current.USERNAME].head.rotation));
+            PLAYER_POSE_STORE[LS.current.USERNAME].head.rotation.copyFrom(new Quaternion());
             mesh.setAbsolutePosition(PLAYER_POSE_STORE[LS.current.USERNAME].root.position.add(PLAYER_POSE_STORE[LS.current.USERNAME].head.position).clone());
             PLAYER_POSE_STORE[LS.current.USERNAME].head.position.copyFrom(new Vector3(0, 0, 0));
 

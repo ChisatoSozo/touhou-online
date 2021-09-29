@@ -20,6 +20,7 @@ const defaultKeyMap = {
     16: 'CROUCH', //shift
     32: 'JUMP', //space
     1: 'SHOOT', //click
+    3: 'STRONG_SHOOT', //right-click
     80: 'DIALOGUE', //p
 };
 

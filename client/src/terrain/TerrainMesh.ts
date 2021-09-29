@@ -176,6 +176,7 @@ export const TerrainMeshComponent = () => {
 
         return () => {
             terrain.dispose();
+            octree.dynamicContent = octree.dynamicContent.filter(elem => elem !== terrain);
         }
     }, [assets, octree, scene, setGround, terrainData])
     return null;

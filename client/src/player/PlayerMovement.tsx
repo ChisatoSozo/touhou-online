@@ -93,7 +93,7 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = () => {
 
         PLAYER_POSE_STORE[LS.current.USERNAME].root.position.copyFrom(sphere.getAbsolutePosition())
         if (movementStateRef.current === "flying") {
-            PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation.copyFrom(sphere.absoluteRotationQuaternion)
+            sphere.rotationQuaternion?.copyFrom(PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation)
         }
     });
 

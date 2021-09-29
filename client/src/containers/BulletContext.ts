@@ -110,6 +110,7 @@ type AddBulletGroup = (
     instruction: DeepPartial<PreBulletInstruction>,
     sourceBulletId?: string,
     supressNotPrecomputedWarning?: boolean,
+    mine?: boolean
 ) => string;
 
 interface IBulletContext {
@@ -203,6 +204,7 @@ export const useBulletContext = (
             instruction: DeepPartial<PreBulletInstruction>,
             sourceBulletId?: string,
             supressNotPrecomputedWarning = false,
+            mine = false,
         ) => {
             if (!parent) throw new Error('parent not ready!');
             if (!scene) throw new Error('scene not ready!');
@@ -239,7 +241,7 @@ export const useBulletContext = (
 
             makeInstances(mesh, timings.length);
 
-            const material = makeBulletMaterial(preparedInstruction.materialOptions, assets, scene);
+            const material = makeBulletMaterial(preparedInstruction.materialOptions, assets, scene, mine);
             const glow = preparedInstruction.materialOptions.glow;
             if (preparedInstruction.materialOptions.glow) {
                 glowLayer.referenceMeshToUseItsOwnMaterial(mesh);

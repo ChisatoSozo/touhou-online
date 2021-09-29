@@ -1,6 +1,8 @@
 import { keyObject } from "../../containers/ControlsContext";
+import { LS } from "../../containers/LSContext";
 import { extractBasis, orthoganalProjection } from "../../utils/MathUtils";
 import { MovementUpdateFunction } from "../PlayerMovement";
+import { PLAYER_POSE_STORE } from "../PlayerPoseStore";
 
 const VELOCITY_CONVERSION_RATE = 1;
 const VELOCITY_CONVERSION_FACTOR = 0.5;
@@ -10,13 +12,7 @@ const DRAG = 0.1
 export const doFlying: MovementUpdateFunction = (deltaS, mesh, terrainData, scene) => {
     if (!scene.activeCamera || !mesh.physicsImpostor || !mesh.rotationQuaternion) return
 
-    const xDelta = keyObject.keyDeltas["lookX"]
-    const yDelta = keyObject.keyDeltas["lookY"]
-
-    const { forward, right } = extractBasis(mesh.rotationQuaternion);
-    mesh.rotateAround(mesh.getAbsolutePosition(), forward, xDelta * -0.4);
-    mesh.rotateAround(mesh.getAbsolutePosition(), right, yDelta * 0.4);
-
+    const { forward } = extractBasis(PLAYER_POSE_STORE[LS.current.USERNAME].root.rotation)
     const velocity = mesh.physicsImpostor.getLinearVelocity()
     if (!velocity) return;
 

@@ -1,7 +1,8 @@
 import compression from "compression";
 import cors from "cors";
 import express, { Application } from "express";
-import { createServer, Server as HTTPServer } from "http";
+import fs from "fs";
+import { createServer, Server as HTTPSServer } from "https";
 import { Image } from 'image-js';
 import path from "path";
 import socketIO, { Server as SocketIOServer } from "socket.io";
@@ -9,7 +10,7 @@ import socketIO, { Server as SocketIOServer } from "socket.io";
 const version = 'height_new.png'
 
 export class Server {
-  private httpServer: HTTPServer;
+  private httpsServer: HTTPSServer;
   private app: Application;
   private io: SocketIOServer;
 
@@ -31,8 +32,12 @@ export class Server {
       }
     }
     this.app = express();
-    this.httpServer = createServer(this.app);
-    this.io = socketIO(this.httpServer);
+
+    this.httpsServer = createServer({
+      key: fs.readFileSync(path.join(__dirname, 'ssl/server.key')),
+      cert: fs.readFileSync(path.join(__dirname, 'ssl/server.cert'))
+    }, this.app);
+    this.io = socketIO(this.httpsServer);
 
     this.configureApp();
     this.configureRoutes();
@@ -113,7 +118,7 @@ export class Server {
   }
 
   public listen(callback: (port: number) => void): void {
-    this.httpServer.listen(this.DEFAULT_PORT, () => {
+    this.httpsServer.listen(this.DEFAULT_PORT, () => {
       callback(this.DEFAULT_PORT);
     });
   }

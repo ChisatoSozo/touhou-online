@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "start": "title touhou-server && ts-node ./src/index.ts",
+        "start": "title voice-server && ts-node ./src/index.ts",
         "dev": "nodemon --watch './src/**/*.ts' --exec npx ts-node ./src/index.ts",
         "protos": "npm run server-protos && npm run client-protos",
         "server-protos": "grpc_tools_node_protoc    --proto_path=protos --js_out=import_style=commonjs,binary:src/protos           --ts_out=service=grpc-node:src/protos        --grpc_out=src/protos   touhou.proto",
@@ -26,7 +26,7 @@
         "image-js": "^0.32.0",
         "pngjs": "^6.0.0",
         "protoc-gen-grpc": "^2.0.2",
-        "socket.io": "^2.3.0",
+        "socket.io": "^2.1.4",
         "ts-protoc-gen": "^0.14.0"
     }
 }

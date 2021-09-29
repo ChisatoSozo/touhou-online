@@ -3,10 +3,16 @@ import { v4 as uuid } from 'uuid';
 import { MakeMaterial } from '.';
 import { LASER_WARNING } from '../../utils/Constants';
 import { glsl } from '../../utils/MaterialUtils';
+import { LOG_DEPTH } from '../../utils/Switches';
 import { commonLaserVertexShaderWithWarning } from './CommonMaterialShaders';
 
 Effect.ShadersStore.laserVertexShader = commonLaserVertexShaderWithWarning;
 Effect.ShadersStore.laserFragmentShader = glsl`
+    
+    #ifdef LOGARITHMICDEPTH
+        #extension GL_EXT_frag_depth : enable
+    #endif
+
     uniform vec3 toColor;
     varying vec3 vPositionW;
     varying vec3 vNormalW;
@@ -32,10 +38,8 @@ Effect.ShadersStore.laserFragmentShader = glsl`
         
         color = mix(color, toColor, laserTerm );
         color = mix(color, vec3(1.0, 1.0, 1.0), float(dTiming < ${LASER_WARNING}.));
-        // vec3 antiColor = vec3(1.0, 1.0, 1.0) - color;
-
-        // float dist = clamp(distance(vPositionW, playerPosition) * .5, 0., 1.);
-        // color = mix(antiColor, color, dist);
+        
+        #include<logDepthFragment>
 
         gl_FragColor = vec4(color, alpha);
     }
@@ -52,6 +56,7 @@ export const makeLaserMaterial: MakeMaterial = (materialOptions, assets, scene) 
         {
             attributes: ['position', 'normal', 'uv', 'world0', 'world1', 'world2', 'world3'],
             uniforms: ['worldView', 'worldViewProjection', 'view', 'projection', 'direction', 'cameraPosition'],
+            defines: LOG_DEPTH ? ["LOGARITHMICDEPTH"] : [],
             needAlphaBlending: materialOptions.hasAlpha,
         },
     );

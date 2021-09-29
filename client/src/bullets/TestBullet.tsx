@@ -14,10 +14,10 @@ export const testInstruction: DeepPartial<PreBulletInstruction> = {
     patternOptions: {
         pattern: 'burst',
         num: 300,
-        repeat: {
-            times: 5,
-            delay: 3,
-        },
+        // repeat: {
+        //     times: 5,
+        //     delay: 3,
+        // },
         speed: 2,
         radius: 0.5,
     },

@@ -3,11 +3,11 @@
     "version": "0.1.0",
     "private": true,
     "dependencies": {
-        "@material-ui/core": "^4.12.3",
         "@babylonjs/core": "^4.2.0",
         "@babylonjs/gui": "^4.2.0",
         "@babylonjs/loaders": "^4.2.0",
         "@improbable-eng/grpc-web": "^0.14.0",
+        "@material-ui/core": "^4.12.3",
         "@testing-library/jest-dom": "^5.11.4",
         "@testing-library/react": "^11.1.0",
         "@testing-library/user-event": "^12.1.10",
@@ -36,6 +36,7 @@
         "react-scripts": "4.0.3",
         "seedrandom": "^3.0.5",
         "simplex-noise": "^3.0.0",
+        "socket.io-client": "^2.4.0",
         "typescript": "^4.1.2",
         "uuid": "^8.3.2",
         "web-vitals": "^1.0.1"

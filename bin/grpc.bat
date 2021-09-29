@@ -1,1 +1,4 @@
-grpcwebproxy --backend_addr=localhost:4000 --run_tls_server=false --allow_all_origins --use_websockets
+TITLE grpcServer
+cd ../
+cd grpc
+grpc.bat

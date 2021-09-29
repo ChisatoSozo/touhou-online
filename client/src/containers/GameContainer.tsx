@@ -55,7 +55,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnable
                             <EffectContext.Provider value={effects}>
                                 <GlowContext.Provider value={glow}>
                                     <BulletContext.Provider value={bullets}>
-                                        <TerrainDataProvider heightmapEndpoint={`http://${window.location.hostname}:5000`} size={mapSize} height={heightScale}>
+                                        <TerrainDataProvider heightmapEndpoint={`https://${window.location.hostname}:5000`} size={mapSize} height={heightScale}>
                                             {children}
                                         </TerrainDataProvider>
                                     </BulletContext.Provider>

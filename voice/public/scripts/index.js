@@ -63,7 +63,7 @@ function updateUserList(socketIds) {
   });
 }
 
-const socket = io.connect("localhost:5000");
+const socket = io.connect(`${window.location.hostname}:5000`);
 
 socket.on("update-user-list", ({ users }) => {
   updateUserList(users);
@@ -121,7 +121,7 @@ socket.on("call-rejected", data => {
   unselectUsersFromList();
 });
 
-peerConnection.ontrack = function({ streams: [stream] }) {
+peerConnection.ontrack = function ({ streams: [stream] }) {
   const remoteVideo = document.getElementById("remote-video");
   if (remoteVideo) {
     remoteVideo.srcObject = stream;

@@ -9,6 +9,7 @@ import { AttackState, Avatar, AvatarMap } from '../protos/touhou_pb';
 import { PreBulletInstruction } from '../types/BulletTypes';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { makeLogarithmic } from '../utils/MeshUtils';
+import { THIRD_PERSON } from '../utils/Switches';
 import { createPlayerData, PlayerData, PLAYER_DATA_STORE, PLAYER_POSE_STORE } from './PlayerPoseStore';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -25,10 +26,6 @@ const tempInstruction: PreBulletInstruction = {
     patternOptions: {
         pattern: 'burst',
         num: 1000,
-        repeat: {
-            times: 5,
-            delay: 3,
-        },
         speed: 3,
         radius: 2,
     },
@@ -77,6 +74,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
                 octree.dynamicContent.push(child);
                 child.alwaysSelectAsActiveMesh = true
                 child.receiveShadows = true;
+                child.isVisible = THIRD_PERSON
             }
         })
         octree.dynamicContent.push(avatarModel.mesh);
@@ -101,7 +99,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
     useBeforeRender(() => {
         if (!addBulletGroup || !avatarModel?.mesh) return;
         if (PLAYER_DATA_STORE[username].attackState === AttackState.ATTACKING && lastPlayerState.current.attackState === AttackState.NOT_ATTACKING) {
-            addBulletGroup(avatarModel.mesh.parent as TransformNode, tempInstruction);
+            addBulletGroup(avatarModel.mesh.parent as TransformNode, tempInstruction, undefined, undefined, false);
         }
         lastPlayerState.current = { ...PLAYER_DATA_STORE[username] }
     })

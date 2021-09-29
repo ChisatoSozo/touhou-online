@@ -4,6 +4,7 @@ import { glsl } from '../../utils/MaterialUtils';
 
 export const commonVertexShaderWithWarning = glsl`
     #include<instancesDeclaration>
+    #include<logDepthDeclaration>
     attribute vec3 position;
     attribute vec3 normal;
     attribute vec2 uv;
@@ -69,11 +70,13 @@ export const commonVertexShaderWithWarning = glsl`
         vNormalW = rotation * normal;
         
         gl_Position = worldViewProjection * totalPosition;
+        #include<logDepthVertex>
     }
 `;
 
 export const commonLaserVertexShaderWithWarning = glsl`
 #include<instancesDeclaration>
+    #include<logDepthDeclaration>
 attribute vec3 position;
 attribute vec3 normal;
 attribute vec2 uv;
@@ -144,5 +147,6 @@ void main() {
     vNormalW = rotation * normal;
     
     gl_Position = worldViewProjection * totalPosition;
+    #include<logDepthVertex>
 }
 `;
