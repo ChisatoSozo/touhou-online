@@ -10,7 +10,7 @@ import { Terrain } from '../terrain/Terrain';
 import { protoRig } from '../utils/ProtoUtils';
 
 export const World = () => {
-    const { sendUpdate, worldState } = useOnline(`http://${window.location.hostname}:8080`);
+    const { sendUpdate, worldState, remoteUsers } = useOnline(`http://${window.location.hostname}:8080`);
 
     useBeforeRender(() => {
         sendUpdate(protoRig(PLAYER_POSE_STORE[LS.current.USERNAME]));
@@ -23,7 +23,7 @@ export const World = () => {
             <Player />
             <Terrain />
             {Object.keys(PLAYER_POSE_STORE).map(
-                (player) => <PlayerAvatar key={player} username={player} />
+                (player) => <PlayerAvatar key={player} username={player} remoteUsers={remoteUsers} />
             )}
         </>
     );

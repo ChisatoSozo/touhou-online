@@ -1,98 +1,24 @@
 import { grpc } from '@improbable-eng/grpc-web';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LS } from '../containers/LSContext';
 import { Empty, PlayerState, Rig, WorldState } from '../protos/touhou_pb';
 import { TouhouClient } from '../protos/touhou_pb_service';
 import { ONLINE } from '../utils/Switches';
-import { setupSockets } from '../voice/setupSockets';
+import { useSetupSockets } from '../voice/setupSockets';
 
 export const useVoiceChat = () => {
+    const { remoteUsers, socketId: mySocketId } = useSetupSockets();
+
     useEffect(() => {
-        setupSockets()
+        return () => {
+            const videos = document.getElementsByTagName("video");
+            for (const video of videos) {
+                video.parentElement?.removeChild(video)
+            }
+        }
     }, [])
 
-    const voiceUsers = useRef<{ [key: string]: boolean }>({})
-    // const peerConnections = useRef<{ [key: string]: RTCPeerConnection }>({})
-    // useMemo(() => {
-    //     localStorage.debug = '*';
-
-
-    //     const newStream = ({ streams: [stream] }: { streams: MediaStream[] }) => {
-    //         const audioEl = document.createElement("audio");
-    //         document.body.appendChild(audioEl);
-    //         audioEl.srcObject = stream;
-    //         audioEl.play();
-    //     };
-
-    //     const callUser = async (socketId: string) => {
-    //         const offer = await peerConnection.createOffer();
-    //         voiceUsers.current[socketId] = true
-
-    //         await peerConnections.current[socketId].setLocalDescription(new RTCSessionDescription(offer));
-
-    //         socket.emit("call-user", {
-    //             offer,
-    //             to: socketId
-    //         });
-
-    //     }
-
-    //     socket.onAny(console.log)
-    //     socket.on("update-user-list", ({ users }: { users: string[] }) => {
-    //         users.forEach(user => {
-    //             if (!(user in voiceUsers)) {
-    //                 voiceUsers.current[user] = false;
-    //                 peerConnections.current[user] = new RTCPeerConnection();
-    //                 //@ts-ignore
-    //                 peerConnections.current[user].ontrack = newStream
-    //                 if (socket.id > user) return;
-    //                 callUser(user)
-    //             }
-    //         })
-    //     });
-
-    //     socket.on("remove-user", ({ socketId }) => {
-    //         delete voiceUsers.current[socketId]
-    //         delete peerConnections.current[socketId]
-    //     });
-
-    //     socket.on("call-made", async data => {
-    //         await peerConnection.setRemoteDescription(
-    //             new RTCSessionDescription(data.offer)
-    //         );
-    //         const answer = await peerConnection.createAnswer();
-    //         await peerConnection.setLocalDescription(new RTCSessionDescription(answer));
-
-    //         socket.emit("make-answer", {
-    //             answer,
-    //             to: data.socket
-    //         });
-    //     });
-
-    //     socket.on("answer-made", async data => {
-    //         await peerConnection.setRemoteDescription(
-    //             new RTCSessionDescription(data.answer)
-    //         );
-    //         if (voiceUsers.current[data.socket as string]) return;
-    //         callUser(data.socket);
-    //     });
-
-    //     socket.on("call-rejected", data => {
-    //         alert(`User: "Socket: ${data.socket}" rejected your call.`);
-    //     });
-
-    //     navigator.getUserMedia(
-    //         { video: false, audio: true },
-    //         stream => {
-    //             stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
-    //         },
-    //         error => {
-    //             console.warn(error.message);
-    //         }
-    //     );
-
-    //     return socket
-    // }, [voiceUsers]);
+    return { remoteUsers, mySocketId }
 }
 
 export const useOnline = (url: string) => {
@@ -105,6 +31,8 @@ export const useOnline = (url: string) => {
     );
     const playerStateUpdateStream = useMemo(() => (ONLINE ? client.playerStateUpdate() : undefined), [client]);
 
+    const { remoteUsers, mySocketId } = useVoiceChat()
+
     const sendUpdate = useCallback(
         (rig?: Rig) => {
             if (!ONLINE) return;
@@ -112,9 +40,10 @@ export const useOnline = (url: string) => {
             playerState.setUsername(LS.current.USERNAME);
             playerState.setAvatar(LS.current.CHARACTER)
             playerState.setRig(rig);
+            if (mySocketId) playerState.setSocketId(mySocketId);
             playerStateUpdateStream?.write(playerState);
         },
-        [playerStateUpdateStream],
+        [playerStateUpdateStream, mySocketId],
     );
 
     const [worldState, setWorldState] = useState<WorldState.AsObject>();
@@ -130,7 +59,5 @@ export const useOnline = (url: string) => {
         }
     }, [client]);
 
-    useVoiceChat()
-
-    return { sendUpdate, worldState };
+    return { sendUpdate, worldState, mySocketId, remoteUsers };
 };

@@ -180,6 +180,9 @@ export class PlayerState extends jspb.Message {
   getAttackState(): AttackStateMap[keyof AttackStateMap];
   setAttackState(value: AttackStateMap[keyof AttackStateMap]): void;
 
+  getSocketId(): string;
+  setSocketId(value: string): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PlayerState.AsObject;
   static toObject(includeInstance: boolean, msg: PlayerState): PlayerState.AsObject;
@@ -196,6 +199,7 @@ export namespace PlayerState {
     rig?: Rig.AsObject,
     avatar: AvatarMap[keyof AvatarMap],
     attackState: AttackStateMap[keyof AttackStateMap],
+    socketId: string,
   }
 }
 

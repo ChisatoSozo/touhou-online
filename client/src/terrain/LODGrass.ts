@@ -2,11 +2,12 @@ import { Scene } from "@babylonjs/core/scene";
 import { useEffect, useState } from "react";
 import { useScene } from "react-babylonjs";
 import { Assets } from "../containers/AssetContext";
+import { ITerrainData } from '../forks/CustomAssetManager';
 import { useAssets } from "../hooks/useAssets";
 import { useDeltaBeforeRender } from "../hooks/useDeltaBeforeRender";
 import { useOctree } from "../hooks/useOctree";
+import { useTerrainData } from '../hooks/useTerrainData';
 import { Grass } from "./Grass";
-import { ITerrainData, useTerrainData } from "./TerrainDataProvider";
 
 
 
@@ -18,7 +19,7 @@ export const TerrainGrassComponent = () => {
     const [grass, setGrass] = useState<LODGrass>()
 
     useEffect(() => {
-        if (!scene || !terrainData.heightMapTexture || !terrainData.terrainSize || !terrainData.terrainHeightScale || !terrainData.terrainResolution || !octree || !assets.containers.grass) return;
+        if (!scene || !terrainData || !octree || !assets.containers.grass) return;
         const grass = new LODGrass(assets, scene, terrainData);
         setGrass(grass);
         octree.dynamicContent.push(...grass.grasses.map(grass => grass.grassBase))

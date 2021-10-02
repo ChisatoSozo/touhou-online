@@ -1,6 +1,7 @@
-import { Mesh, TransformNode, Vector3 } from '@babylonjs/core';
+import { Mesh, Sound, TransformNode, Vector3 } from '@babylonjs/core';
 import React, { useContext, useEffect, useRef } from 'react';
 import { useBeforeRender, useScene } from 'react-babylonjs';
+import { LS } from '../containers/LSContext';
 import { useAddBulletGroup } from '../hooks/useAddBulletGroup';
 import { useModel } from '../hooks/useModel';
 import { useOctree } from '../hooks/useOctree';
@@ -10,11 +11,13 @@ import { PreBulletInstruction } from '../types/BulletTypes';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { makeLogarithmic } from '../utils/MeshUtils';
 import { THIRD_PERSON } from '../utils/Switches';
+import { Users } from '../voice/setupSockets';
 import { createPlayerData, PlayerData, PLAYER_DATA_STORE, PLAYER_POSE_STORE } from './PlayerPoseStore';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface PlayerAvatarProps {
     username: string;
+    remoteUsers: Users;
 }
 
 const avatarToModel: { [key in AvatarMap[keyof AvatarMap]]: string } = {
@@ -55,7 +58,7 @@ const tempInstruction: PreBulletInstruction = {
     lifespan: 20,
 }
 
-export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
+export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username, remoteUsers }) => {
     const scene = useScene()
     const avatarModel = useModel(avatarToModel[PLAYER_DATA_STORE[username].avatar]);
     const octree = useOctree()
@@ -74,7 +77,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
                 octree.dynamicContent.push(child);
                 child.alwaysSelectAsActiveMesh = true
                 child.receiveShadows = true;
-                child.isVisible = THIRD_PERSON
+                child.isVisible = username !== LS.current.USERNAME || THIRD_PERSON
             }
         })
         octree.dynamicContent.push(avatarModel.mesh);
@@ -96,12 +99,36 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ username }) => {
     }, [octree, avatarModel, scene, addShadowCaster, username]);
 
     const lastPlayerState = useRef<PlayerData>(createPlayerData())
+
+    const audioRef = useRef<Sound>();
+
     useBeforeRender(() => {
-        if (!addBulletGroup || !avatarModel?.mesh) return;
+        if (!addBulletGroup || !avatarModel?.mesh || !scene) return;
         if (PLAYER_DATA_STORE[username].attackState === AttackState.ATTACKING && lastPlayerState.current.attackState === AttackState.NOT_ATTACKING) {
             addBulletGroup(avatarModel.mesh.parent as TransformNode, tempInstruction, undefined, undefined, false);
         }
         lastPlayerState.current = { ...PLAYER_DATA_STORE[username] }
+
+        if (username === LS.current.USERNAME) return;
+        if (audioRef.current) return;
+        const socketId = PLAYER_DATA_STORE[username].socketId;
+        if (!socketId) return;
+        const user = remoteUsers[socketId];
+        if (!user) return;
+        const stream = user.stream;
+        if (!stream) throw new Error("no stream when there should be")
+
+
+        const audio = new Sound(username + "sound", stream, scene, null, {
+            autoplay: true,
+            spatialSound: true,
+            distanceModel: "exponential",
+            rolloffFactor: 1.414,
+        })
+        audio.switchPanningModelToHRTF();
+
+        audio.attachToMesh(avatarModel.mesh)
+        audioRef.current = audio;
     })
 
     return null;

@@ -1,9 +1,9 @@
 import { Color3, Scene } from "@babylonjs/core";
+import { ITerrainData } from '../forks/CustomAssetManager';
 import { CustomMaterial } from "../forks/CustomMaterial";
 import { convertToCell, glsl } from "../utils/MaterialUtils";
 import { LOG_DEPTH, SMOOTH_TERRAIN } from "../utils/Switches";
 import { COMMON_SHADER_FUNC, makeTerrainHeight, makeTerrainVaryings } from "./CommonShader";
-import { ITerrainData } from "./TerrainDataProvider";
 
 export const createTerrainMaterial = (terrainData: ITerrainData, lods: number[], scene: Scene) => {
 	if (!scene.activeCamera) throw new Error("Attempt to construct material with no active camera")

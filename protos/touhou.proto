@@ -46,6 +46,7 @@ message PlayerState {
     Rig rig = 2;
     Avatar avatar = 3;
     AttackState attack_state = 4;
+    string socket_id = 5;
 }
 
 message WorldState {

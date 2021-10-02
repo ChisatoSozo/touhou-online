@@ -1420,7 +1420,8 @@ proto.touhou.PlayerState.toObject = function(includeInstance, msg) {
     username: jspb.Message.getFieldWithDefault(msg, 1, ""),
     rig: (f = msg.getRig()) && proto.touhou.Rig.toObject(includeInstance, f),
     avatar: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    attackState: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    attackState: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    socketId: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -1473,6 +1474,10 @@ proto.touhou.PlayerState.deserializeBinaryFromReader = function(msg, reader) {
     case 4:
       var value = /** @type {!proto.touhou.AttackState} */ (reader.readEnum());
       msg.setAttackState(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSocketId(value);
       break;
     default:
       reader.skipField();
@@ -1529,6 +1534,13 @@ proto.touhou.PlayerState.serializeBinaryToWriter = function(message, writer) {
   if (f !== 0.0) {
     writer.writeEnum(
       4,
+      f
+    );
+  }
+  f = message.getSocketId();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
       f
     );
   }
@@ -1623,6 +1635,24 @@ proto.touhou.PlayerState.prototype.getAttackState = function() {
  */
 proto.touhou.PlayerState.prototype.setAttackState = function(value) {
   return jspb.Message.setProto3EnumField(this, 4, value);
+};
+
+
+/**
+ * optional string socket_id = 5;
+ * @return {string}
+ */
+proto.touhou.PlayerState.prototype.getSocketId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.touhou.PlayerState} returns this
+ */
+proto.touhou.PlayerState.prototype.setSocketId = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 

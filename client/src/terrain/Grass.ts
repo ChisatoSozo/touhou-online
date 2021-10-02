@@ -2,13 +2,13 @@ import { Color3, Quaternion, Vector3 } from "@babylonjs/core";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
 import { Assets } from "../containers/AssetContext";
+import { ITerrainData } from '../forks/CustomAssetManager';
 import { CustomMaterial } from "../forks/CustomMaterial";
 import { getModel } from "../hooks/useModel";
 import { convertToCell, glsl } from "../utils/MaterialUtils";
 import { makeInstances } from "../utils/MeshUtils";
 import { LOG_DEPTH } from "../utils/Switches";
 import { COMMON_SHADER_FUNC, makeTerrainHeight, makeTerrainUV, makeTerrainVaryings } from "./CommonShader";
-import { ITerrainData } from "./TerrainDataProvider";
 
 export class Grass {
 

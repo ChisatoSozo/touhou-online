@@ -5,11 +5,12 @@ import { useContext, useEffect } from "react";
 import { useScene } from "react-babylonjs";
 import { Assets } from "../containers/AssetContext";
 import { TerrainContext } from "../containers/TerrainContext";
+import { ITerrainData } from '../forks/CustomAssetManager';
 import { useAssets } from "../hooks/useAssets";
 import { useOctree } from "../hooks/useOctree";
+import { useTerrainData } from '../hooks/useTerrainData';
 import { MAX_MESHES_IN_SCENE } from "../utils/Constants";
 import { SMOOTH_TERRAIN } from "../utils/Switches";
-import { ITerrainData, useTerrainData } from "./TerrainDataProvider";
 import { createTerrainMaterial } from "./TerrainMaterial";
 
 type SquareType = "bottomLeftCorner" |
@@ -164,7 +165,7 @@ export const TerrainMeshComponent = () => {
     const terrainData = useTerrainData()
 
     useEffect(() => {
-        if (!terrainData.terrainSize || !terrainData.terrainHeightScale || !scene || !octree || !terrainData.heightMapTexture || !terrainData.terrainResolution || !terrainData.heightMap) return;
+        if (!scene || !octree || !terrainData) return;
         const terrain = new TerrainMesh("terrain", terrainData, [0.1, 0.2, 0.3, 0.4], newTerrain => {
             //TODO: TerrainPhysics
             // newTerrain.physicsImpostor = new PhysicsImpostor(newTerrain, PhysicsImpostor.HeightmapImpostor, { mass: 0, friction: 1 });

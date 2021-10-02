@@ -3,6 +3,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import React, { useContext, useEffect, useMemo } from 'react';
 import { useScene } from 'react-babylonjs';
 import { useMultiModels } from '../hooks/useModel';
+import { useTerrainData } from '../hooks/useTerrainData';
 import { ShadowContext } from '../lights/Sun';
 import { MAX_MESHES_IN_SCENE } from '../utils/Constants';
 import { makeCellMaterial } from '../utils/MaterialUtils';
@@ -10,7 +11,6 @@ import { getRandomInt } from '../utils/MathUtils';
 import { simplex } from '../utils/Noise';
 import { LOG_DEPTH } from '../utils/Switches';
 import { snapToHeightmap, snapVecToHeightmap } from '../utils/WorldUtils';
-import { useTerrainData } from './TerrainDataProvider';
 
 interface TreesProps {
     mapSize: number
@@ -27,7 +27,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     const { addShadowCaster } = useContext(ShadowContext)
 
     const mergedTrees = useMemo(() => {
-        if (!tree || !scene) return;
+        if (!tree?.length || !scene) return;
         const outMeshes: Mesh[] = [];
 
         tree.forEach(treeInst => {
@@ -47,8 +47,7 @@ export const Trees: React.FC<TreesProps> = ({ mapSize, heightScale }) => {
     }, [scene, tree])
 
     useEffect(() => {
-        if (!scene || !terrainData.heightMap || !mergedTrees || !terrainData.getNormalAtCoordinates) return
-
+        if (!scene || !terrainData || !mergedTrees) return
 
         const leafTexture = RawTexture.CreateRGBATexture(new Uint8Array([0, 153, 51, 255]), 1, 1, scene);
         const trunkTexture = RawTexture.CreateRGBATexture(new Uint8Array([128, 64, 0, 255]), 1, 1, scene);

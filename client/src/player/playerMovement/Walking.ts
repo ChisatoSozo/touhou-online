@@ -1,6 +1,6 @@
 import { Vector2, Vector3 } from "@babylonjs/core";
 import { keyObject } from "../../containers/ControlsContext";
-import { ITerrainData } from "../../terrain/TerrainDataProvider";
+import { ITerrainData } from '../../forks/CustomAssetManager';
 import { LATERAL_SPEED, WALK_MAX_SLOPE } from "../../utils/Constants";
 import { snapVecToHeightmap } from "../../utils/WorldUtils";
 import { movementStateRef, MovementUpdateFunction } from "../PlayerMovement";

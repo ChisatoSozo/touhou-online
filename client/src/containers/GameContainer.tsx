@@ -1,7 +1,5 @@
 import { Vector3 } from '@babylonjs/core';
 import React from 'react';
-import { heightScale, mapSize } from '../terrain/Terrain';
-import { TerrainDataProvider } from '../terrain/TerrainDataProvider';
 import { AssetContext, useAssetContext } from './AssetContext';
 import { BulletContext, useBulletContext } from './BulletContext';
 import { ControlsContext, useControlsContext } from './ControlsContext';
@@ -18,6 +16,7 @@ interface GameContainerProps {
 }
 
 export const assetPaths = [
+    `https://${window.location.hostname}:5000/terrain.terrain`,
 
     `${process.env.PUBLIC_URL}/assets/trees/Tree_1.glb`,
     `${process.env.PUBLIC_URL}/assets/trees/Tree_2.glb`,
@@ -55,9 +54,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({ children, xrEnable
                             <EffectContext.Provider value={effects}>
                                 <GlowContext.Provider value={glow}>
                                     <BulletContext.Provider value={bullets}>
-                                        <TerrainDataProvider heightmapEndpoint={`https://${window.location.hostname}:5000`} size={mapSize} height={heightScale}>
-                                            {children}
-                                        </TerrainDataProvider>
+                                        {children}
                                     </BulletContext.Provider>
                                 </GlowContext.Provider>
                             </EffectContext.Provider>

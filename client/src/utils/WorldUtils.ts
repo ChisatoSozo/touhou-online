@@ -1,5 +1,5 @@
 import { TransformNode, Vector3 } from "@babylonjs/core";
-import { ITerrainData } from "../terrain/TerrainDataProvider";
+import { ITerrainData } from '../forks/CustomAssetManager';
 
 export const snapToHeightmap = (terrainData: ITerrainData, object: TransformNode, offsetY = 0) => {
     if (!terrainData.getHeightAtCoordinates) return;

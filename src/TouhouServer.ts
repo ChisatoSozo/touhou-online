@@ -46,7 +46,7 @@ export class TouhouServer implements ITouhouServer {
             const worldState = new WorldState();
             worldState.setPlayersList(playerStates);
             call.write(worldState);
-        }, 10);
+        }, 100);
 
         call.on('end', () => call.end());
     }

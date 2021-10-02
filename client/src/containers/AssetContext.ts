@@ -11,9 +11,15 @@ import {
 import parsePath from 'parse-filepath';
 import React, { useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
-import { CustomAssetsManager, ParticlesAssetTask } from '../forks/CustomAssetManager';
+import { CustomAssetsManager, ITerrainData, ParticlesAssetTask, TerrainAssetTask } from '../forks/CustomAssetManager';
 import { QualityName } from '../utils/Constants';
+import "../utils/LoadingOverride";
+import { loadingTextDiv } from '../utils/LoadingOverride';
 import { LS } from './LSContext';
+
+
+const mapSize = 8000
+const heightScale = 640;
 
 export interface Assets {
     containers: {
@@ -31,6 +37,9 @@ export interface Assets {
     sounds: {
         [key: string]: Sound | undefined;
     }
+    terrain: {
+        [key: string]: ITerrainData | undefined;
+    }
 }
 export interface IAssetContext {
     assets: Assets;
@@ -44,6 +53,7 @@ const defaultAssetContext: () => IAssetContext = () => ({
         meshes: {},
         particles: {},
         sounds: {},
+        terrain: {},
     },
     assetsLoaded: false,
 });
@@ -114,6 +124,9 @@ const loadAssets = async (scene: Scene, assetPaths: string[]) => {
                     assetTask = assetsManager.addParticlesTask(name, directory + '/');
                     assetTask.onError = console.error;
                     break;
+                case '.terrain':
+                    assetTask = assetsManager.addTerrainTask(name, directory, heightScale, mapSize);
+                    break;
                 case '.wav':
                 case '.mp3':
                     assetTask = assetsManager.addBinaryFileTask(name, path);
@@ -123,6 +136,12 @@ const loadAssets = async (scene: Scene, assetPaths: string[]) => {
                     reject(`Unknown asset extension ${extension}`);
             }
         });
+
+        assetsManager.onProgress = (remaining, total) => {
+            if (!loadingTextDiv.current) return;
+            //@ts-ignore
+            loadingTextDiv.current.innerHTML = `Loading ${total - remaining}/${total}<br><br>Please Wait, The Girls Are Preparing...`;
+        }
 
         assetsManager.onFinish = (tasks) => {
             const assets = defaultAssetContext().assets;
@@ -141,6 +160,11 @@ const loadAssets = async (scene: Scene, assetPaths: string[]) => {
                 if (task instanceof ParticlesAssetTask) {
                     if (task.name in assets.particles) reject(`Duplicate particle name ${task.name}`);
                     assets.particles[task.name] = task.loadedParticleSystem;
+                    return;
+                }
+                if (task instanceof TerrainAssetTask) {
+                    if (task.name in assets.terrain) reject(`Duplicate particle name ${task.name}`);
+                    assets.terrain[task.name] = task.loadedTerrainData;
                     return;
                 }
                 if (task instanceof BinaryFileAssetTask) {
@@ -189,6 +213,7 @@ export const useAssetContext = (assetPaths: string[]) => {
             assets.meshes = { ...internalAssets.meshes, ...loadedAssets.meshes };
             assets.particles = { ...internalAssets.particles, ...loadedAssets.particles };
             assets.sounds = { ...internalAssets.sounds, ...loadedAssets.sounds };
+            assets.terrain = { ...internalAssets.terrain, ...loadedAssets.terrain };
             setAssets(assets);
             setAssetsLoaded(true);
         });

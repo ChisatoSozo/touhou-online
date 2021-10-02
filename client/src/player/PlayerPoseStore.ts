@@ -43,6 +43,7 @@ interface PlayerDataStoreType {
     [username: string]: {
         avatar: AvatarMap[keyof AvatarMap]
         attackState: AttackStateMap[keyof AttackStateMap]
+        socketId?: string
     };
 }
 

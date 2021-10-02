@@ -2,9 +2,10 @@ import { Mesh, PhysicsImpostor, Quaternion, Scene, Vector3 } from '@babylonjs/co
 import React, { MutableRefObject, useCallback, useEffect, useState } from 'react';
 import { useScene } from 'react-babylonjs';
 import { LS } from '../containers/LSContext';
+import { ITerrainData } from '../forks/CustomAssetManager';
 import { useDeltaBeforeRender } from '../hooks/useDeltaBeforeRender';
 import { useOctree } from '../hooks/useOctree';
-import { ITerrainData, useTerrainData } from '../terrain/TerrainDataProvider';
+import { useTerrainData } from '../hooks/useTerrainData';
 import { LOG_DEPTH } from '../utils/Switches';
 import { snapVecToHeightmap } from '../utils/WorldUtils';
 import { MovementState } from './Player';
@@ -13,6 +14,7 @@ import { doFloating } from './playerMovement/Floating';
 import { doFlying } from './playerMovement/Flying';
 import { doWalking } from './playerMovement/Walking';
 import { getPlayerPosition, PLAYER_POSE_STORE } from './PlayerPoseStore';
+
 
 const playerPosition = new Vector3(0, 500, 0)
 
@@ -64,7 +66,7 @@ export const PlayerMovement: React.FC<PlayerMovementProps> = () => {
     }, [sphere, scene])
 
     useDeltaBeforeRender((scene, deltaS) => {
-        if (!sphere) return
+        if (!sphere || !terrainData) return
 
         const terrainPos = getPlayerPosition()
         snapVecToHeightmap(terrainData, terrainPos)

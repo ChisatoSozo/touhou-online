@@ -69,7 +69,7 @@ export const Game = () => {
         PLAYER_POSE_STORE[LS.current.USERNAME] = createRig()
         PLAYER_DATA_STORE[LS.current.USERNAME] = {
             avatar: LS.current.CHARACTER,
-            attackState: AttackState.NOT_ATTACKING
+            attackState: AttackState.NOT_ATTACKING,
         }
         Music.stop()
     }, [])
